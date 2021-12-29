@@ -1,5 +1,4 @@
-
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.11;
 // SPDX-License-Identifier: Unlicensed
 interface IERC20 {
 
@@ -230,7 +229,7 @@ library SafeMath {
 }
 
 abstract contract Context {
-    function _msgSender() internal view virtual returns (address payable) {
+    function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
 
@@ -405,7 +404,7 @@ contract Ownable is Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () internal {
+    constructor ()  {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
@@ -619,7 +618,7 @@ contract Fidometa is Context, IERC20, Ownable {
         delete locks[target_];
     }
 
-    constructor () public {
+    constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
         
         //exclude owner and this contract from fee
@@ -751,10 +750,6 @@ contract Fidometa is Context, IERC20, Ownable {
         );
     }
 
- 
-    
-     //to recieve ETH from uniswapV2Router when swaping
-    receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
         _rTotal = _rTotal.sub(rFee);
@@ -767,27 +762,6 @@ contract Fidometa is Context, IERC20, Ownable {
         return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee);
     }
 
-    //  function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256, uint256) {
-    //     (uint256 tTransferAmount, uint256 tFee, uint256 tBankFee) = _getTValues(tAmount);
-    //     (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(tAmount, tFee, tBankFee, _getRate());
-    //     return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee, tBankFee);
-    // }
-
-
-    //   function _getTValues(uint256 tAmount) private view returns (uint256, uint256, uint256) {
-    //     uint256 tFee = calculateTaxFee(tAmount);
-    //     uint256 tBankFee = calculateBankFee(tAmount);
-    //     uint256 tTransferAmount = tAmount.sub(tFee).sub(tBankFee);
-    //     return (tTransferAmount, tFee, tBankFee);
-    // }
-
-    // function _getRValues(uint256 tAmount, uint256 tFee, uint256 tLiquidity, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
-    //     uint256 rAmount = tAmount.mul(currentRate);
-    //     uint256 rFee = tFee.mul(currentRate);
-    //     uint256 rLiquidity = tLiquidity.mul(currentRate);
-    //     uint256 rTransferAmount = rAmount.sub(rFee).sub(rLiquidity);
-    //     return (rAmount, rTransferAmount, rFee);
-    // }
 
     function _getTValues(uint256 tAmount) private view returns (uint256, uint256) {
         uint256 tFee = calculateTaxFee(tAmount);
@@ -975,8 +949,4 @@ contract Fidometa is Context, IERC20, Ownable {
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
-
-
-    
-
 }
