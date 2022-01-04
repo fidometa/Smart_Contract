@@ -825,6 +825,9 @@ contract Fidometa is Context, IERC20, Ownable {
         function excludeFromCommunityCharge(address account) public onlyOwner {
         _isExcludedFromCommunity_charge[account] = true;
     }
+        function includeInCommunityCharge(address account) public onlyOwner {
+        _isExcludedFromCommunity_charge[account] = false;
+    }
 
         function excludedFromEcoSysFee(address account) public onlyOwner {
         _isExcludedFromEcoSysFee[account] = true;
@@ -835,11 +838,38 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromEcoSysFee[account] = false;
     }
 
+
     
-    
-    function includeInCommunityCharge(address account) public onlyOwner {
-        _isExcludedFromCommunity_charge[account] = false;
+        function excludedFromSurcharge1(address account) public onlyOwner {
+        _isExcludedFromSurcharge1[account] = true;
     }
+
+
+      function includeInSurcharge1(address account) public onlyOwner {
+        _isExcludedFromSurcharge1[account] = false;
+    }
+
+         function excludedFromSurcharge2(address account) public onlyOwner {
+        _isExcludedFromSurcharge2[account] = true;
+    }
+
+
+      function includeInSurcharge2(address account) public onlyOwner {
+        _isExcludedFromSurcharge2[account] = false;
+    }
+
+         function excludedFromSurcharge3(address account) public onlyOwner {
+        _isExcludedFromSurcharge3[account] = true;
+    }
+
+
+      function includeInSurcharge3(address account) public onlyOwner {
+        _isExcludedFromSurcharge3[account] = false;
+    }
+
+    
+    
+
 
   
    
