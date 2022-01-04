@@ -485,7 +485,7 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private _tFeeTotal;
 
     string private _name = "Fido Meta";
-    string private _symbol = "FMC";
+    string private _symbol = "FMC1";
     uint8  private _decimals = 9;
     
     uint256 private _previousCommunityCharge = _community_charge;
@@ -498,9 +498,9 @@ contract Fidometa is Context, IERC20, Ownable {
 
     uint256 public _community_charge = 5;
     uint256 public _ecoSysFee = 1;
-    uint256 public _surcharge1 = 1;
-    uint256 public _surcharge2 = 1;
-    uint256 public _surcharge3 = 1;
+    uint256 public _surcharge1 = 0;
+    uint256 public _surcharge2 = 0;
+    uint256 public _surcharge3 = 0;
 
     uint256 private _previousEcoSysFee  = _ecoSysFee;
     uint256 private _previousSurcharge1 = _surcharge1;
