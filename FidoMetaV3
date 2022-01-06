@@ -447,7 +447,7 @@ contract Ownable is Context {
         _owner = newOwner;
     }
 
-       /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
+    /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
     /// @param target Address to be frozen
     /// @param freeze either to freeze it or not
     function freezeAccount(address target, bool freeze) onlyOwner public {
@@ -482,14 +482,12 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _tTotal = 15000000000  * 10**9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
-    uint256 private _tFeeTotal;
+    uint256 private _tCommunityChargeTotal;
 
     string private _name = "Fido Meta";
-    string private _symbol = "FMC1";
+    string private _symbol = "FMC";
     uint8  private _decimals = 9;
-    
-    uint256 private _previousCommunityCharge = _community_charge;
-    event UnlockEvent(uint startTime, uint millis_days,uint expiry);
+
 
     address private _ecoSysWallet;
     address private _surcharge_1_Wallet;
@@ -502,6 +500,7 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 public _surcharge2 = 0;
     uint256 public _surcharge3 = 0;
 
+    uint256 private _previousCommunityCharge = _community_charge;
     uint256 private _previousEcoSysFee  = _ecoSysFee;
     uint256 private _previousSurcharge1 = _surcharge1;
     uint256 private _previousSurcharge2 = _surcharge2;
@@ -509,14 +508,39 @@ contract Fidometa is Context, IERC20, Ownable {
     
     uint256 public _maxTxAmount = 5000000 * 10**9;
 
-        struct LockDetails {
+    struct LockDetails {
         uint256 startTime;
         uint256 timeInDays;
         uint256 lockedToken;
     }
 
+    struct TValues {
+        uint256 tTransferAmount;
+        uint256 tCommunityCharge;
+        uint256 tEcoSysFee;
+        uint256 tSurcharge1;
+        uint256 tSurcharge2;
+        uint256 tSurcharge3;
+    }
 
-     mapping(address => LockDetails) public locks;
+    struct MValues {
+        uint256 rAmount;
+        uint256 rTransferAmount;
+        uint256 rCommunityCharge;
+        uint256 tTransferAmount;
+        uint256 tCommunityCharge;
+        uint256 tEcoSysFee;
+        uint256 tSurcharge1;
+        uint256 tSurcharge2;
+        uint256 tSurcharge3;
+    }
+
+
+
+    event UnlockEvent(uint startTime, uint millis_days,uint expiry);
+    mapping(address => LockDetails) public locks;
+
+
 
     /* * @dev Lock a specific amount of tokens for specific days.
      * @param target The target address.
@@ -541,42 +565,67 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
+
+
+    /** @dev Set community Charge, to be deducted from each transaction
+     *  @param community_charge ,in percentage
+     */
      function setCommunityCharge(uint8 community_charge)  public onlyOwner{
-        require(community_charge <= 100, "Tax % should be less than equal to 100%");
+        require(community_charge <= 100, "Community Charge % should be less than equal to 100%");
         _community_charge = community_charge;
     }
 
+   /** @dev Set Ecosystem Fee, to be deducted from each transaction
+     * @param ecoSysFee ,in percentage
+     */
     function setEcoSysFee(uint8 ecoSysFee)  public onlyOwner{
         require(ecoSysFee <= 100, "EcoSysFee % should be less than equal to 100%");
         _ecoSysFee = ecoSysFee;
     }
 
+    /** @dev Set Surcharge-1, to be deducted from each transaction
+     *  @param surcharge1 ,in percentage
+     */
+
     function setSurcharge1(uint8 surcharge1)  public onlyOwner{
         require(surcharge1 <= 100, "surcharge1 % should be less than equal to 100%");
         _surcharge1 = surcharge1;
     }
+
+    /** @dev Set Surcharge-2, to be deducted from each transaction
+     *  @param surcharge2 ,in percentage
+     */
     function setSurcharge2(uint8 surcharge2)  public onlyOwner{
         require(surcharge2 <= 100, "surcharge2 % should be less than equal to 100%");
         _surcharge2 = surcharge2;
     }
+
+    /** @dev Set Surcharge-3, to be deducted from each transaction
+     *  @param surcharge3 ,in percentage
+     */
     function setSurcharge3(uint8 surcharge3)  public onlyOwner{
         require(surcharge3 <= 100, "surcharge3 % should be less than equal to 100%");
         _surcharge3 = surcharge3;
     }
 
+    /** @dev Set EcoSysWallet, Where ecosystem fee will deposited
+     *  @param ecoSysWallet ,it,s a wallet  where ecosystem fee will be deposited
+     */
     function setEcoSysWallet(address ecoSysWallet) public onlyOwner {
-        require(ecoSysWallet != address(0), "Bank wallet is not valid");
+        require(ecoSysWallet != address(0), "Ecosystem wallet wallet is not valid");
         _ecoSysWallet = ecoSysWallet;
         _isExcludedFromCommunity_charge[_ecoSysWallet] = true;
-        _isExcludedFromEcoSysFee[_ecoSysWallet] = true;
-        _isExcludedFromReward[_ecoSysWallet] = true;
-        _isExcludedFromSurcharge1[_ecoSysWallet] = true;
-        _isExcludedFromSurcharge2[_ecoSysWallet] = true;
-        _isExcludedFromSurcharge3[_ecoSysWallet] = true;
+        _isExcludedFromEcoSysFee[_ecoSysWallet] =   true;
+        _isExcludedFromReward[_ecoSysWallet]    =   true;
+        _isExcludedFromSurcharge1[_ecoSysWallet] =  true;
+        _isExcludedFromSurcharge2[_ecoSysWallet] =  true;
+        _isExcludedFromSurcharge3[_ecoSysWallet] =  true;
     }
 
+    /** @dev Set surcharge_1_wallet, Where surcharge1 fee will be deposited
+     *  @param surcharge_1_wallet ,it,s a wallet  where surcharge1 fee will be deposited
+     */
     function setSurcharge_1_Wallet(address surcharge_1_wallet) public onlyOwner {
-        require(surcharge_1_wallet != address(0), "Bank wallet is not valid");
         _surcharge_1_Wallet = surcharge_1_wallet;
         _isExcludedFromCommunity_charge[_surcharge_1_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_1_Wallet] = true;
@@ -586,8 +635,10 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[_surcharge_1_Wallet] = true;
     }
 
+    /** @dev Set surcharge_2_wallet, Where surcharge_2 fee will deposited
+     *  @param surcharge_2_wallet ,it,s a wallet where surcharge_2 fee will be deposited
+     */
     function setSurcharge_2_Wallet(address surcharge_2_wallet) public onlyOwner {
-        require(surcharge_2_wallet != address(0), "Bank wallet is not valid");
         _surcharge_2_Wallet = surcharge_2_wallet;
         _isExcludedFromCommunity_charge[_surcharge_2_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_2_Wallet] = true;
@@ -597,8 +648,10 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[_surcharge_2_Wallet] = true;
     }
 
+    /** @dev Set surcharge_3_wallet, Where surcharge_3 fee will deposited
+     *  @param surcharge_3_wallet ,it,s a wallet where surcharge_3 fee will be deposited
+     */
     function setSurcharge_3_Wallet(address surcharge_3_wallet) public onlyOwner {
-        require(surcharge_3_wallet != address(0), "Bank wallet is not valid");
         _surcharge_3_Wallet = surcharge_3_wallet;
         _isExcludedFromCommunity_charge[_surcharge_3_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_3_Wallet] = true;
@@ -608,24 +661,32 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[_surcharge_3_Wallet] = true;
     }
 
+    /** @dev show surcharge-1 wallet currently set
+     */
      function viewSurcharge_1_Wallet() public view  returns (address) {
         return _surcharge_1_Wallet;
     }
 
+    /** @dev show surcharge-2 wallet currently set
+     */
         function viewSurcharge_2_Wallet() public view  returns (address) {
         return _surcharge_2_Wallet;
     }
 
+    /** @dev show surcharge-3 wallet currently set
+     */
         function viewSurcharge_3_Wallet() public view  returns (address) {
         return _surcharge_3_Wallet;
     }
 
+    /** @dev show Ecosystem wallet currently set
+     */
          function viewEcoSysWallet() public view  returns (address) {
         return _ecoSysWallet;
     }
 
 
-   /* * @dev Burns a specific amount of tokens.
+   /** @dev Burns a specific amount of tokens.
      * @param value The amount of lowest token units to be burned.
      */
     function burn(uint256 value) public onlyOwner {
@@ -633,30 +694,33 @@ contract Fidometa is Context, IERC20, Ownable {
     }
     
     
-     /* * @dev Mint a specific amount of tokens.
+     /** @dev Mint a specific amount of tokens.
      * @param value The amount of lowest token units to be mint.
      */
     function mint(uint256 value) public onlyOwner {
       _mint(msg.sender, value);
     }
-    
+
+    /** @dev burn some token from an account
+     */   
 	function _burn(address account, uint256 amount) internal onlyOwner {
     require(account != address(0), "ERC20: burn from the zero address");
     _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
     _tTotal = _tTotal.sub(amount);
     emit Transfer(account, address(0), amount);
   }
-  
+
+     /** @dev mint some token to an address
+     */ 
     function _mint(address account, uint amount) internal onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
         _tTotal = _tTotal.add(amount);
         _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
     }
-
-
    
-  // extract the startTime, locked amount and expiry of a target
+    /** @dev show the startTime, locked amount and expiry of a target
+     */ 
      function lockDetail(address target_) public view returns(uint startTime, uint lockedToken,uint unlockDateEpoch) {
         require(target_ != address(0), "Invalid target");
         uint256  startTimeOfLockedToken = locks[target_].startTime;
@@ -666,8 +730,9 @@ contract Fidometa is Context, IERC20, Ownable {
         uint expiry = startTimeOfLockedToken + millis_days;
        return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
     }
-    
-    // functionality to extend the locking time, for already locked token
+
+     /** @dev extend the locking time, for already locked token
+     */    
      function extendLockTime(address target_, uint256 timeindays) external onlyOwner{
         require(timeindays >= 0, "TimeInDays should be greater than 0");
         uint256  lockedToken = locks[target_].lockedToken;
@@ -675,7 +740,8 @@ contract Fidometa is Context, IERC20, Ownable {
         locks[target_].timeInDays = locks[target_].timeInDays + timeindays;
     }
 
-    // functionality to reduce the locking time, for already locked token
+     /** @dev Reduce the locking time, for already locked token
+     */ 
     function reduceLockTime(address target_, uint256 timeindays) external onlyOwner{
         require(timeindays >= 0, "TimeInDays should be greater than 0");
         uint256  lockedToken = locks[target_].lockedToken;
@@ -683,7 +749,8 @@ contract Fidometa is Context, IERC20, Ownable {
         locks[target_].timeInDays = locks[target_].timeInDays - timeindays;
     }
 
-    //function to unlock token by owner 
+     /** @dev unlock token by owner on any address
+     */
      function unlockToken(address target_, uint256 amount) external onlyOwner{
         require(amount >= 0, "Amount should be greater than 0");
         uint  lockedToken = locks[target_].lockedToken;
@@ -695,7 +762,8 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-     //function to release any lock on token by owner 
+     /**release all locks on token by owner 
+     */
      function releaseLock(address target_) external onlyOwner{
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
@@ -705,7 +773,7 @@ contract Fidometa is Context, IERC20, Ownable {
     constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
         
-        //exclude owner and this contract from fee
+        //exclude owner and this contract from fees
         _isExcludedFromCommunity_charge[owner()] = true;
         _isExcludedFromCommunity_charge[address(this)] = true;
 
@@ -779,8 +847,9 @@ contract Fidometa is Context, IERC20, Ownable {
         return _isExcludedFromReward[account];
     }
 
-    function totalFees() public view returns (uint256) {
-        return _tFeeTotal;
+    //Shows total community charge deducted so far
+    function totalCommunityCharge() public view returns (uint256) {
+        return _tCommunityChargeTotal;
     }
 
     function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
@@ -800,6 +869,7 @@ contract Fidometa is Context, IERC20, Ownable {
         return rAmount.div(currentRate);
     }
 
+    //exclude an address from getting community reward
     function excludeFromReward(address account) public onlyOwner() {
         require(!_isExcludedFromReward[account], "Account is already excluded");
         if(_rOwned[account] > 0) {
@@ -809,6 +879,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _excludedFromReward.push(account);
     }
 
+    //include an address from getting community reward
     function includeInReward(address account) external onlyOwner() {
         require(_isExcludedFromReward[account], "Account is already excluded");
         for (uint256 i = 0; i < _excludedFromReward.length; i++) {
@@ -821,142 +892,130 @@ contract Fidometa is Context, IERC20, Ownable {
             }
         }
     }
-    
-        function excludeFromCommunityCharge(address account) public onlyOwner {
+    //exclude from community charge
+    function excludeFromCommunityCharge(address account) public onlyOwner {
         _isExcludedFromCommunity_charge[account] = true;
     }
-        function includeInCommunityCharge(address account) public onlyOwner {
+    //include in community charge
+    function includeInCommunityCharge(address account) public onlyOwner {
         _isExcludedFromCommunity_charge[account] = false;
     }
 
-        function excludedFromEcoSysFee(address account) public onlyOwner {
+
+    //exclude from ecosystem fee
+    function excludedFromEcoSysFee(address account) public onlyOwner {
         _isExcludedFromEcoSysFee[account] = true;
     }
 
-
-      function includeInEcoSysFee(address account) public onlyOwner {
+   //include in ecosystem fee
+    function includeInEcoSysFee(address account) public onlyOwner {
         _isExcludedFromEcoSysFee[account] = false;
     }
 
+ 
 
-    
-        function excludedFromSurcharge1(address account) public onlyOwner {
+
+    //exclude from surcharge1
+    function excludedFromSurcharge1(address account) public onlyOwner {
         _isExcludedFromSurcharge1[account] = true;
     }
-
-
-      function includeInSurcharge1(address account) public onlyOwner {
+    //include in surcharge1
+    function includeInSurcharge1(address account) public onlyOwner {
         _isExcludedFromSurcharge1[account] = false;
     }
 
-         function excludedFromSurcharge2(address account) public onlyOwner {
+
+    //exclude from surcharge2
+    function excludedFromSurcharge2(address account) public onlyOwner {
         _isExcludedFromSurcharge2[account] = true;
     }
-
-
-      function includeInSurcharge2(address account) public onlyOwner {
+    //include in surcharge2
+    function includeInSurcharge2(address account) public onlyOwner {
         _isExcludedFromSurcharge2[account] = false;
     }
 
-         function excludedFromSurcharge3(address account) public onlyOwner {
+
+    //exclude from surcharge3
+    function excludedFromSurcharge3(address account) public onlyOwner {
         _isExcludedFromSurcharge3[account] = true;
     }
-
-
-      function includeInSurcharge3(address account) public onlyOwner {
+    //include in surcharge3
+    function includeInSurcharge3(address account) public onlyOwner {
         _isExcludedFromSurcharge3[account] = false;
     }
 
     
-    
-
-
-  
-   
+    /** it set the maximum amount of token an address can tranfer at once
+    */
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(
             10**2
         );
     }
 
+  
+    // it calculates ecosystem fee for an amount
         function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
         if (_ecoSysWallet == address(0)) return 0;
         return _amount.mul(_ecoSysFee).div(10**2);
     }
 
+    // it calculates community charge for an amount
+    function calculateCommunityCharge(uint256 _amount) private view returns (uint256) {
+        return _amount.mul(_community_charge).div(
+            10**2
+        );
+    }
+
+    // it calculates surcharge1  for an amount
         function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
         if (_surcharge_1_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge1).div(10**2);
     }
 
+    // it calculates surcharge2 for an amount
         function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
         if (_surcharge_2_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge2).div(10**2);
     }
+    
+    // it calculates surcharge3  for an amount
         function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
         if (_surcharge_3_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge3).div(10**2);
     }
 
-
-
-
     function _reflectFee(uint256 rFee, uint256 tFee) private {
         _rTotal = _rTotal.sub(rFee);
-        _tFeeTotal = _tFeeTotal.add(tFee);
+        _tCommunityChargeTotal = _tCommunityChargeTotal.add(tFee);
     }
 
-    struct TValues {
-        uint256 tTransferAmount;
-        uint256 tFee;
-        uint256 tEcoSysFee;
-        uint256 tSurcharge1;
-        uint256 tSurcharge2;
-        uint256 tSurcharge3;
-    }
-
-
-    struct MValues {
-        uint256 rAmount;
-        uint256 rTransferAmount;
-        uint256 rFee;
-        uint256 tTransferAmount;
-        uint256 tFee;
-        uint256 tEcoSysFee;
-        uint256 tSurcharge1;
-        uint256 tSurcharge2;
-        uint256 tSurcharge3;
-    }
 
     function _getValues(uint256 tAmount) private view returns (MValues memory) {
        uint256 currentRate = _getRate();
         (TValues memory value) = _getTValues(tAmount);
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(tAmount, value.tFee, currentRate);
+        (uint256 rAmount, uint256 rTransferAmount, uint256 rCommunityCharge) = _getRValues(tAmount, value.tCommunityCharge, currentRate);
         uint256 rEcoSysFee =   value.tEcoSysFee.mul(currentRate);
         uint256 rSurcharge1 =  value.tSurcharge1.mul(currentRate);
         uint256 rSurcharge2 =  value.tSurcharge2.mul(currentRate);
         uint256 rSurcharge3 =  value.tSurcharge3.mul(currentRate);
         rTransferAmount =  rTransferAmount.sub(rEcoSysFee).sub(rSurcharge1).sub(rSurcharge2).sub(rSurcharge3);
-        MValues memory mValues = MValues({rAmount:rAmount,rTransferAmount:rTransferAmount, rFee:rFee, tTransferAmount:value.tTransferAmount,tFee: value.tFee,tEcoSysFee:value.tEcoSysFee,tSurcharge1:value.tSurcharge1,tSurcharge2:value.tSurcharge2,tSurcharge3:value.tSurcharge3 });
+        MValues memory mValues = MValues({rAmount:rAmount,rTransferAmount:rTransferAmount, rCommunityCharge:rCommunityCharge, tTransferAmount:value.tTransferAmount,tCommunityCharge: value.tCommunityCharge,tEcoSysFee:value.tEcoSysFee,tSurcharge1:value.tSurcharge1,tSurcharge2:value.tSurcharge2,tSurcharge3:value.tSurcharge3 });
         return (mValues);
     }
 
 
     function _getTValues(uint256 tAmount) private view returns (TValues memory) {
-        uint256 tFee = calculateTaxFee(tAmount);
+        uint256   tCommunityCharge = calculateCommunityCharge(tAmount);
         uint256   tEcoSysFee = calculateEcoSysFee(tAmount);
         uint256   tSurcharge1 = calculateSurcharge1(tAmount);
         uint256   tSurcharge2 = calculateSurcharge2(tAmount);
         uint256   tSurcharge3 = calculateSurcharge3(tAmount);
-         uint256 tTransferAmountEco = tAmount.sub(tFee).sub(tEcoSysFee);
+         uint256 tTransferAmountEco = tAmount.sub(tCommunityCharge).sub(tEcoSysFee);
          uint256 tTransferAmount =  tTransferAmountEco.sub(tSurcharge1).sub(tSurcharge2).sub(tSurcharge3);
-
-        TValues memory tvalue = TValues({tTransferAmount:tTransferAmount, tFee:tFee, tEcoSysFee:tEcoSysFee,tSurcharge1:tSurcharge1,tSurcharge2:tSurcharge2,tSurcharge3:tSurcharge3});
+        TValues memory tvalue = TValues({tTransferAmount:tTransferAmount, tCommunityCharge:tCommunityCharge, tEcoSysFee:tEcoSysFee,tSurcharge1:tSurcharge1,tSurcharge2:tSurcharge2,tSurcharge3:tSurcharge3});
         return (tvalue);
     }
-
-    
-
 
     function _getRValues(uint256 tAmount, uint256 tFee,uint256 currentRate) private pure returns (uint256, uint256, uint256) {
         uint256 rAmount = tAmount.mul(currentRate);
@@ -980,14 +1039,6 @@ contract Fidometa is Context, IERC20, Ownable {
         }
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
-    }
-    
-  
-    
-    function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_community_charge).div(
-            10**2
-        );
     }
 
  function removeEcosysFee() private {
@@ -1014,13 +1065,13 @@ contract Fidometa is Context, IERC20, Ownable {
     }
    
     
-    function removeTaxFee() private {
+    function removeCommunityCharge() private {
         if(_community_charge == 0) return;
         _previousCommunityCharge = _community_charge;
         _community_charge = 0;
     }
     
-    function restoreTaxFee() private {
+    function restoreCommunityCharge() private {
         _community_charge = _previousCommunityCharge;
     }
 
@@ -1059,12 +1110,9 @@ contract Fidometa is Context, IERC20, Ownable {
         return _isExcludedFromSurcharge3[account];
     }
 
-    
-
     function _approve(address owner, address spender, uint256 amount) private {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
-
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -1080,7 +1128,6 @@ contract Fidometa is Context, IERC20, Ownable {
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
         
-
         //   if some token is locked, and  amount is greater than allowed withdrawable amount than checking that if loking period is finished,
         //  if locking period is finised than allow transfer and update locked token amount. if it is still in locking period error will be thrown.
 
@@ -1097,8 +1144,9 @@ contract Fidometa is Context, IERC20, Ownable {
                 locks[from].lockedToken  = lockedToken - required_from_locked_mode;
             }
         }
+
         //indicates if fee should be deducted from transfer
-        bool takeTaxFee = true;
+        bool takeCommunityCharge = true;
         bool takeEcosysFee = true;
         bool takeSurcharge1 = true;
         bool takeSurcharge2 = true;
@@ -1106,7 +1154,7 @@ contract Fidometa is Context, IERC20, Ownable {
         
         //if any account belongs to _isExcludedFromFee account then remove the fee
         if(_isExcludedFromCommunity_charge[from] || _isExcludedFromCommunity_charge[to]){
-            takeTaxFee = false;
+            takeCommunityCharge = false;
         }
          //if any account belongs to _isExcludedFromFee account then remove the fee
         if(_isExcludedFromEcoSysFee[from] || _isExcludedFromEcoSysFee[to]){
@@ -1125,7 +1173,7 @@ contract Fidometa is Context, IERC20, Ownable {
             takeSurcharge3 = false;
         }
 
-        _tokenTransfer(from,to,amount,takeTaxFee,takeEcosysFee,takeSurcharge1,takeSurcharge2,takeSurcharge3);
+        _tokenTransfer(from,to,amount,takeCommunityCharge,takeEcosysFee,takeSurcharge1,takeSurcharge2,takeSurcharge3);
 
     }
 
@@ -1177,9 +1225,10 @@ contract Fidometa is Context, IERC20, Ownable {
     
 
     //this method is responsible for taking all fee, if takeFee is true
-    function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeTaxFee,bool takeEcosysFee,bool takeSurcharge1,bool takeSurcharge2,bool takeSurcharge3) private {
-        if(!takeTaxFee)
-            removeTaxFee();
+    function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeCommunityCharge,bool takeEcosysFee,bool takeSurcharge1,bool takeSurcharge2,bool takeSurcharge3) private {
+        if(!takeCommunityCharge)
+            removeCommunityCharge();
+
         if(!takeEcosysFee)
             removeEcosysFee();
 
@@ -1204,8 +1253,8 @@ contract Fidometa is Context, IERC20, Ownable {
             _transferStandard(sender, recipient, amount);
         }
         
-        if(!takeTaxFee)
-            restoreTaxFee();
+        if(!takeCommunityCharge)
+            restoreCommunityCharge();
         if(!takeEcosysFee)
             restoreEcosysFee();
         if(!takeSurcharge1)
@@ -1225,7 +1274,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _takeSurcharge1(mvalues.tSurcharge1);
         _takeSurcharge2(mvalues.tSurcharge2);
         _takeSurcharge3(mvalues.tSurcharge3);
-        _reflectFee(mvalues.rFee, mvalues.tFee);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
         emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
 
@@ -1238,7 +1287,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _takeSurcharge1(mvalues.tSurcharge1);
         _takeSurcharge2(mvalues.tSurcharge2);
         _takeSurcharge3(mvalues.tSurcharge3);
-        _reflectFee(mvalues.rFee, mvalues.tFee);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
         emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
 
@@ -1250,7 +1299,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _takeSurcharge1(mvalues.tSurcharge1);
         _takeSurcharge2(mvalues.tSurcharge2);
         _takeSurcharge3(mvalues.tSurcharge3);
-        _reflectFee(mvalues.rFee, mvalues.tFee);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
         emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }  
 
@@ -1265,7 +1314,7 @@ contract Fidometa is Context, IERC20, Ownable {
        _takeSurcharge1(mvalues.tSurcharge1);
         _takeSurcharge2(mvalues.tSurcharge2);
         _takeSurcharge3(mvalues.tSurcharge3);
-        _reflectFee(mvalues.rFee, mvalues.tFee);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
         emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
 
