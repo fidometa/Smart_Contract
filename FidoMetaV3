@@ -1195,7 +1195,7 @@ contract Fidometa is Context, IERC20, Ownable {
             _rOwned[_surcharge_1_Wallet] = _rOwned[_surcharge_1_Wallet].add(rSurcharge1);
             if (_isExcludedFromSurcharge1[_surcharge_1_Wallet])
                 _tOwned[_surcharge_1_Wallet] = _tOwned[_surcharge_1_Wallet].add(tSurcharge1);
-            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge1);
+            emit Transfer(_msgSender(), _surcharge_1_Wallet, tSurcharge1);
         }
     }
 
@@ -1206,7 +1206,7 @@ contract Fidometa is Context, IERC20, Ownable {
             _rOwned[_surcharge_2_Wallet] = _rOwned[_surcharge_2_Wallet].add(rSurcharge2);
             if (_isExcludedFromSurcharge1[_surcharge_2_Wallet])
                 _tOwned[_surcharge_2_Wallet] = _tOwned[_surcharge_2_Wallet].add(tSurcharge2);
-            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge2);
+            emit Transfer(_msgSender(), _surcharge_2_Wallet, tSurcharge2);
         }
     }
 
@@ -1218,7 +1218,7 @@ contract Fidometa is Context, IERC20, Ownable {
             _rOwned[_surcharge_3_Wallet] = _rOwned[_surcharge_3_Wallet].add(rSurcharge3);
             if (_isExcludedFromSurcharge3[_surcharge_3_Wallet])
                 _tOwned[_surcharge_3_Wallet] = _tOwned[_surcharge_3_Wallet].add(tSurcharge3);
-            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge3);
+            emit Transfer(_msgSender(), _surcharge_3_Wallet, tSurcharge3);
         }
     }
 
