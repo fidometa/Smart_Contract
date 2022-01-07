@@ -447,7 +447,7 @@ contract Ownable is Context {
         _owner = newOwner;
     }
 
-       /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
+    /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
     /// @param target Address to be frozen
     /// @param freeze either to freeze it or not
     function freezeAccount(address target, bool freeze) onlyOwner public {
@@ -465,38 +465,82 @@ contract Fidometa is Context, IERC20, Ownable {
     mapping (address => mapping (address => uint256)) private _allowances;
     mapping (address => uint256) private _balances;
 
-    mapping (address => bool) private _isExcludedFromFee;
+    mapping (address => bool) private _isExcludedFromCommunity_charge;
 
-    mapping (address => bool) private _isExcluded;
-    address[] private _excluded;
+    mapping (address => bool) private _isExcludedFromReward;
+
+    mapping (address => bool) private _isExcludedFromEcoSysFee;
+
+    mapping (address => bool) private _isExcludedFromSurcharge1;
+
+    mapping (address => bool) private _isExcludedFromSurcharge2;
+
+    mapping (address => bool) private _isExcludedFromSurcharge3;
+
+    address[] private _excludedFromReward;
    
     uint256 private constant MAX = ~uint256(0);
     uint256 private _tTotal = 15000000000  * 10**9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
-    uint256 private _tFeeTotal;
+    uint256 private _tCommunityChargeTotal;
 
     string private _name = "Fido Meta";
     string private _symbol = "FMC";
-    uint8 private _decimals = 9;
-    
-    uint256 public _taxFee = 5;
-    uint256 private _previousTaxFee = _taxFee;
-    event UnlockEvent(uint startTime, uint millis_days,uint expiry);
+    uint8  private _decimals = 9;
 
-    address private bank_wallet;
 
-    uint256 public bank_fee = 1;
+    address private _ecoSysWallet;
+    address private _surcharge_1_Wallet;
+    address private _surcharge_2_Wallet;
+    address private _surcharge_3_Wallet;
+
+    uint256 public _community_charge = 5;
+    uint256 public _ecoSysFee = 1;
+    uint256 public _surcharge1 = 0;
+    uint256 public _surcharge2 = 0;
+    uint256 public _surcharge3 = 0;
+
+    uint256 private _previousCommunityCharge = _community_charge;
+    uint256 private _previousEcoSysFee  = _ecoSysFee;
+    uint256 private _previousSurcharge1 = _surcharge1;
+    uint256 private _previousSurcharge2 = _surcharge2;
+    uint256 private _previousSurcharge3 = _surcharge3;
     
     uint256 public _maxTxAmount = 5000000 * 10**9;
 
-        struct LockDetails {
+    struct LockDetails {
         uint256 startTime;
         uint256 timeInDays;
         uint256 lockedToken;
     }
 
+    struct TValues {
+        uint256 tTransferAmount;
+        uint256 tCommunityCharge;
+        uint256 tEcoSysFee;
+        uint256 tSurcharge1;
+        uint256 tSurcharge2;
+        uint256 tSurcharge3;
+    }
 
-     mapping(address => LockDetails) public locks;
+    struct MValues {
+        uint256 rAmount;
+        uint256 rTransferAmount;
+        uint256 rCommunityCharge;
+        uint256 tTransferAmount;
+        uint256 tCommunityCharge;
+        uint256 tEcoSysFee;
+        uint256 tSurcharge1;
+        uint256 tSurcharge2;
+        uint256 tSurcharge3;
+    }
+
+
+
+    event UnlockEvent(uint startTime, uint millis_days,uint expiry);
+    mapping(address => LockDetails) public locks;
+
+
 
     /* * @dev Lock a specific amount of tokens for specific days.
      * @param target The target address.
@@ -521,27 +565,128 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-     function setTaxFee(uint8 _tax_fee)  public onlyOwner{
-        require(_tax_fee <= 100, "Tax % should be less than equal to 100%");
-        _taxFee = _tax_fee;
+
+
+    /** @dev Set community Charge, to be deducted from each transaction
+     *  @param community_charge ,in percentage
+     */
+     function setCommunityCharge(uint8 community_charge)  public onlyOwner{
+        require(community_charge <= 100, "Community Charge % should be less than equal to 100%");
+        _community_charge = community_charge;
     }
 
-      function setBankFee(uint8 _bank_fee)  public onlyOwner{
-        require(bank_fee <= 100, "Tax % should be less than equal to 100%");
-        bank_fee = _bank_fee;
+   /** @dev Set Ecosystem Fee, to be deducted from each transaction
+     * @param ecoSysFee ,in percentage
+     */
+    function setEcoSysFee(uint8 ecoSysFee)  public onlyOwner{
+        require(ecoSysFee <= 100, "EcoSysFee % should be less than equal to 100%");
+        _ecoSysFee = ecoSysFee;
     }
 
-    function setBankWallet(address _bank_wallet) public onlyOwner {
-        require(_bank_wallet != address(0), "Bank wallet is not valid");
-        bank_wallet = _bank_wallet;
+    /** @dev Set Surcharge-1, to be deducted from each transaction
+     *  @param surcharge1 ,in percentage
+     */
+
+    function setSurcharge1(uint8 surcharge1)  public onlyOwner{
+        require(surcharge1 <= 100, "surcharge1 % should be less than equal to 100%");
+        _surcharge1 = surcharge1;
     }
 
-     function bankWallet() public view  returns (address) {
-        return bank_wallet;
+    /** @dev Set Surcharge-2, to be deducted from each transaction
+     *  @param surcharge2 ,in percentage
+     */
+    function setSurcharge2(uint8 surcharge2)  public onlyOwner{
+        require(surcharge2 <= 100, "surcharge2 % should be less than equal to 100%");
+        _surcharge2 = surcharge2;
+    }
+
+    /** @dev Set Surcharge-3, to be deducted from each transaction
+     *  @param surcharge3 ,in percentage
+     */
+    function setSurcharge3(uint8 surcharge3)  public onlyOwner{
+        require(surcharge3 <= 100, "surcharge3 % should be less than equal to 100%");
+        _surcharge3 = surcharge3;
+    }
+
+    /** @dev Set EcoSysWallet, Where ecosystem fee will deposited
+     *  @param ecoSysWallet ,it,s a wallet  where ecosystem fee will be deposited
+     */
+    function setEcoSysWallet(address ecoSysWallet) public onlyOwner {
+        require(ecoSysWallet != address(0), "Ecosystem wallet wallet is not valid");
+        _ecoSysWallet = ecoSysWallet;
+        _isExcludedFromCommunity_charge[_ecoSysWallet] = true;
+        _isExcludedFromEcoSysFee[_ecoSysWallet] =   true;
+        _isExcludedFromReward[_ecoSysWallet]    =   true;
+        _isExcludedFromSurcharge1[_ecoSysWallet] =  true;
+        _isExcludedFromSurcharge2[_ecoSysWallet] =  true;
+        _isExcludedFromSurcharge3[_ecoSysWallet] =  true;
+    }
+
+    /** @dev Set surcharge_1_wallet, Where surcharge1 fee will be deposited
+     *  @param surcharge_1_wallet ,it,s a wallet  where surcharge1 fee will be deposited
+     */
+    function setSurcharge_1_Wallet(address surcharge_1_wallet) public onlyOwner {
+        _surcharge_1_Wallet = surcharge_1_wallet;
+        _isExcludedFromCommunity_charge[_surcharge_1_Wallet] = true;
+        _isExcludedFromEcoSysFee[_surcharge_1_Wallet] = true;
+        _isExcludedFromReward[_surcharge_1_Wallet] = true;
+        _isExcludedFromSurcharge1[_surcharge_1_Wallet] = true;
+        _isExcludedFromSurcharge2[_surcharge_1_Wallet] = true;
+        _isExcludedFromSurcharge3[_surcharge_1_Wallet] = true;
+    }
+
+    /** @dev Set surcharge_2_wallet, Where surcharge_2 fee will deposited
+     *  @param surcharge_2_wallet ,it,s a wallet where surcharge_2 fee will be deposited
+     */
+    function setSurcharge_2_Wallet(address surcharge_2_wallet) public onlyOwner {
+        _surcharge_2_Wallet = surcharge_2_wallet;
+        _isExcludedFromCommunity_charge[_surcharge_2_Wallet] = true;
+        _isExcludedFromEcoSysFee[_surcharge_2_Wallet] = true;
+        _isExcludedFromReward[_surcharge_2_Wallet] = true;
+        _isExcludedFromSurcharge1[_surcharge_2_Wallet] = true;
+        _isExcludedFromSurcharge2[_surcharge_2_Wallet] = true;
+        _isExcludedFromSurcharge3[_surcharge_2_Wallet] = true;
+    }
+
+    /** @dev Set surcharge_3_wallet, Where surcharge_3 fee will deposited
+     *  @param surcharge_3_wallet ,it,s a wallet where surcharge_3 fee will be deposited
+     */
+    function setSurcharge_3_Wallet(address surcharge_3_wallet) public onlyOwner {
+        _surcharge_3_Wallet = surcharge_3_wallet;
+        _isExcludedFromCommunity_charge[_surcharge_3_Wallet] = true;
+        _isExcludedFromEcoSysFee[_surcharge_3_Wallet] = true;
+        _isExcludedFromReward[_surcharge_3_Wallet] = true;
+        _isExcludedFromSurcharge1[_surcharge_3_Wallet] = true;
+        _isExcludedFromSurcharge2[_surcharge_3_Wallet] = true;
+        _isExcludedFromSurcharge3[_surcharge_3_Wallet] = true;
+    }
+
+    /** @dev show surcharge-1 wallet currently set
+     */
+     function viewSurcharge_1_Wallet() public view  returns (address) {
+        return _surcharge_1_Wallet;
+    }
+
+    /** @dev show surcharge-2 wallet currently set
+     */
+        function viewSurcharge_2_Wallet() public view  returns (address) {
+        return _surcharge_2_Wallet;
+    }
+
+    /** @dev show surcharge-3 wallet currently set
+     */
+        function viewSurcharge_3_Wallet() public view  returns (address) {
+        return _surcharge_3_Wallet;
+    }
+
+    /** @dev show Ecosystem wallet currently set
+     */
+         function viewEcoSysWallet() public view  returns (address) {
+        return _ecoSysWallet;
     }
 
 
-   /* * @dev Burns a specific amount of tokens.
+   /** @dev Burns a specific amount of tokens.
      * @param value The amount of lowest token units to be burned.
      */
     function burn(uint256 value) public onlyOwner {
@@ -549,30 +694,33 @@ contract Fidometa is Context, IERC20, Ownable {
     }
     
     
-     /* * @dev Mint a specific amount of tokens.
+     /** @dev Mint a specific amount of tokens.
      * @param value The amount of lowest token units to be mint.
      */
     function mint(uint256 value) public onlyOwner {
       _mint(msg.sender, value);
     }
-    
+
+    /** @dev burn some token from an account
+     */   
 	function _burn(address account, uint256 amount) internal onlyOwner {
     require(account != address(0), "ERC20: burn from the zero address");
     _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
     _tTotal = _tTotal.sub(amount);
     emit Transfer(account, address(0), amount);
   }
-  
+
+     /** @dev mint some token to an address
+     */ 
     function _mint(address account, uint amount) internal onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
         _tTotal = _tTotal.add(amount);
         _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
     }
-
-
    
-  // extract the startTime, locked amount and expiry of a target
+    /** @dev show the startTime, locked amount and expiry of a target
+     */ 
      function lockDetail(address target_) public view returns(uint startTime, uint lockedToken,uint unlockDateEpoch) {
         require(target_ != address(0), "Invalid target");
         uint256  startTimeOfLockedToken = locks[target_].startTime;
@@ -582,8 +730,9 @@ contract Fidometa is Context, IERC20, Ownable {
         uint expiry = startTimeOfLockedToken + millis_days;
        return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
     }
-    
-    // functionality to extend the locking time, for already locked token
+
+     /** @dev extend the locking time, for already locked token
+     */    
      function extendLockTime(address target_, uint256 timeindays) external onlyOwner{
         require(timeindays >= 0, "TimeInDays should be greater than 0");
         uint256  lockedToken = locks[target_].lockedToken;
@@ -591,7 +740,8 @@ contract Fidometa is Context, IERC20, Ownable {
         locks[target_].timeInDays = locks[target_].timeInDays + timeindays;
     }
 
-    // functionality to reduce the locking time, for already locked token
+     /** @dev Reduce the locking time, for already locked token
+     */ 
     function reduceLockTime(address target_, uint256 timeindays) external onlyOwner{
         require(timeindays >= 0, "TimeInDays should be greater than 0");
         uint256  lockedToken = locks[target_].lockedToken;
@@ -599,7 +749,8 @@ contract Fidometa is Context, IERC20, Ownable {
         locks[target_].timeInDays = locks[target_].timeInDays - timeindays;
     }
 
-    //function to unlock token by owner 
+     /** @dev unlock token by owner on any address
+     */
      function unlockToken(address target_, uint256 amount) external onlyOwner{
         require(amount >= 0, "Amount should be greater than 0");
         uint  lockedToken = locks[target_].lockedToken;
@@ -611,7 +762,8 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-     //function to release any lock on token by owner 
+     /**release all locks on token by owner 
+     */
      function releaseLock(address target_) external onlyOwner{
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
@@ -621,9 +773,22 @@ contract Fidometa is Context, IERC20, Ownable {
     constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
         
-        //exclude owner and this contract from fee
-        _isExcludedFromFee[owner()] = true;
-        _isExcludedFromFee[address(this)] = true;
+        //exclude owner and this contract from fees
+        _isExcludedFromCommunity_charge[owner()] = true;
+        _isExcludedFromCommunity_charge[address(this)] = true;
+
+        _isExcludedFromEcoSysFee[owner()] = true;
+        _isExcludedFromEcoSysFee[address(this)] = true;
+
+        _isExcludedFromSurcharge1[owner()] = true;
+        _isExcludedFromSurcharge1[address(this)] = true;
+
+        _isExcludedFromSurcharge2[owner()] = true;
+        _isExcludedFromSurcharge2[address(this)] = true;
+
+        _isExcludedFromSurcharge3[owner()] = true;
+        _isExcludedFromSurcharge3[address(this)] = true;
+
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -644,7 +809,7 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        if (_isExcluded[account]) return _tOwned[account];
+        if (_isExcludedFromReward[account]) return _tOwned[account];
         return tokenFromReflection(_rOwned[account]);
     }
 
@@ -679,21 +844,22 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     function isExcludedFromReward(address account) public view returns (bool) {
-        return _isExcluded[account];
+        return _isExcludedFromReward[account];
     }
 
-    function totalFees() public view returns (uint256) {
-        return _tFeeTotal;
+    //Shows total community charge deducted so far
+    function totalCommunityCharge() public view returns (uint256) {
+        return _tCommunityChargeTotal;
     }
 
     function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
-            (uint256 rAmount,,,,) = _getValues(tAmount);
-            return rAmount;
+            (MValues memory m) = _getValues(tAmount);
+            return m.rAmount;
         } else {
-            (,uint256 rTransferAmount,,,) = _getValues(tAmount);
-            return rTransferAmount;
+            (MValues memory m) = _getValues(tAmount);
+            return m.rTransferAmount;
         }
     }
 
@@ -703,66 +869,155 @@ contract Fidometa is Context, IERC20, Ownable {
         return rAmount.div(currentRate);
     }
 
+    //exclude an address from getting community reward
     function excludeFromReward(address account) public onlyOwner() {
-        require(!_isExcluded[account], "Account is already excluded");
+        require(!_isExcludedFromReward[account], "Account is already excluded");
         if(_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
         }
-        _isExcluded[account] = true;
-        _excluded.push(account);
+        _isExcludedFromReward[account] = true;
+        _excludedFromReward.push(account);
     }
 
+    //include an address from getting community reward
     function includeInReward(address account) external onlyOwner() {
-        require(_isExcluded[account], "Account is already excluded");
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[_excluded.length - 1];
+        require(_isExcludedFromReward[account], "Account is already excluded");
+        for (uint256 i = 0; i < _excludedFromReward.length; i++) {
+            if (_excludedFromReward[i] == account) {
+                _excludedFromReward[i] = _excludedFromReward[_excludedFromReward.length - 1];
                 _tOwned[account] = 0;
-                _isExcluded[account] = false;
-                _excluded.pop();
+                _isExcludedFromReward[account] = false;
+                _excludedFromReward.pop();
                 break;
             }
         }
     }
-    
-        function excludeFromFee(address account) public onlyOwner {
-        _isExcludedFromFee[account] = true;
+    //exclude from community charge
+    function excludeFromCommunityCharge(address account) public onlyOwner {
+        _isExcludedFromCommunity_charge[account] = true;
     }
-    
-    function includeInFee(address account) public onlyOwner {
-        _isExcludedFromFee[account] = false;
+    //include in community charge
+    function includeInCommunityCharge(address account) public onlyOwner {
+        _isExcludedFromCommunity_charge[account] = false;
     }
 
-  
-   
+
+    //exclude from ecosystem fee
+    function excludedFromEcoSysFee(address account) public onlyOwner {
+        _isExcludedFromEcoSysFee[account] = true;
+    }
+
+   //include in ecosystem fee
+    function includeInEcoSysFee(address account) public onlyOwner {
+        _isExcludedFromEcoSysFee[account] = false;
+    }
+
+ 
+
+
+    //exclude from surcharge1
+    function excludedFromSurcharge1(address account) public onlyOwner {
+        _isExcludedFromSurcharge1[account] = true;
+    }
+    //include in surcharge1
+    function includeInSurcharge1(address account) public onlyOwner {
+        _isExcludedFromSurcharge1[account] = false;
+    }
+
+
+    //exclude from surcharge2
+    function excludedFromSurcharge2(address account) public onlyOwner {
+        _isExcludedFromSurcharge2[account] = true;
+    }
+    //include in surcharge2
+    function includeInSurcharge2(address account) public onlyOwner {
+        _isExcludedFromSurcharge2[account] = false;
+    }
+
+
+    //exclude from surcharge3
+    function excludedFromSurcharge3(address account) public onlyOwner {
+        _isExcludedFromSurcharge3[account] = true;
+    }
+    //include in surcharge3
+    function includeInSurcharge3(address account) public onlyOwner {
+        _isExcludedFromSurcharge3[account] = false;
+    }
+
+    
+    /** it set the maximum amount of token an address can tranfer at once
+    */
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(
             10**2
         );
     }
 
+  
+    // it calculates ecosystem fee for an amount
+        function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
+        if (_ecoSysWallet == address(0)) return 0;
+        return _amount.mul(_ecoSysFee).div(10**2);
+    }
+
+    // it calculates community charge for an amount
+    function calculateCommunityCharge(uint256 _amount) private view returns (uint256) {
+        return _amount.mul(_community_charge).div(
+            10**2
+        );
+    }
+
+    // it calculates surcharge1  for an amount
+        function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
+        if (_surcharge_1_Wallet == address(0)) return 0;
+        return _amount.mul(_surcharge1).div(10**2);
+    }
+
+    // it calculates surcharge2 for an amount
+        function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
+        if (_surcharge_2_Wallet == address(0)) return 0;
+        return _amount.mul(_surcharge2).div(10**2);
+    }
+    
+    // it calculates surcharge3  for an amount
+        function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
+        if (_surcharge_3_Wallet == address(0)) return 0;
+        return _amount.mul(_surcharge3).div(10**2);
+    }
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
         _rTotal = _rTotal.sub(rFee);
-        _tFeeTotal = _tFeeTotal.add(tFee);
-    }
-
-    function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256) {
-        (uint256 tTransferAmount, uint256 tFee) = _getTValues(tAmount);
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(tAmount, tFee, _getRate());
-        return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee);
+        _tCommunityChargeTotal = _tCommunityChargeTotal.add(tFee);
     }
 
 
-    function _getTValues(uint256 tAmount) private view returns (uint256, uint256) {
-        uint256 tFee = calculateTaxFee(tAmount);
-        uint256 tTransferAmount = tAmount.sub(tFee);
-        return (tTransferAmount, tFee);
+    function _getValues(uint256 tAmount) private view returns (MValues memory) {
+       uint256 currentRate = _getRate();
+        (TValues memory value) = _getTValues(tAmount);
+        (uint256 rAmount, uint256 rTransferAmount, uint256 rCommunityCharge) = _getRValues(tAmount, value.tCommunityCharge, currentRate);
+        uint256 rEcoSysFee =   value.tEcoSysFee.mul(currentRate);
+        uint256 rSurcharge1 =  value.tSurcharge1.mul(currentRate);
+        uint256 rSurcharge2 =  value.tSurcharge2.mul(currentRate);
+        uint256 rSurcharge3 =  value.tSurcharge3.mul(currentRate);
+        rTransferAmount =  rTransferAmount.sub(rEcoSysFee).sub(rSurcharge1).sub(rSurcharge2).sub(rSurcharge3);
+        MValues memory mValues = MValues({rAmount:rAmount,rTransferAmount:rTransferAmount, rCommunityCharge:rCommunityCharge, tTransferAmount:value.tTransferAmount,tCommunityCharge: value.tCommunityCharge,tEcoSysFee:value.tEcoSysFee,tSurcharge1:value.tSurcharge1,tSurcharge2:value.tSurcharge2,tSurcharge3:value.tSurcharge3 });
+        return (mValues);
     }
 
 
+    function _getTValues(uint256 tAmount) private view returns (TValues memory) {
+        uint256   tCommunityCharge = calculateCommunityCharge(tAmount);
+        uint256   tEcoSysFee = calculateEcoSysFee(tAmount);
+        uint256   tSurcharge1 = calculateSurcharge1(tAmount);
+        uint256   tSurcharge2 = calculateSurcharge2(tAmount);
+        uint256   tSurcharge3 = calculateSurcharge3(tAmount);
+         uint256 tTransferAmountEco = tAmount.sub(tCommunityCharge).sub(tEcoSysFee);
+         uint256 tTransferAmount =  tTransferAmountEco.sub(tSurcharge1).sub(tSurcharge2).sub(tSurcharge3);
+        TValues memory tvalue = TValues({tTransferAmount:tTransferAmount, tCommunityCharge:tCommunityCharge, tEcoSysFee:tEcoSysFee,tSurcharge1:tSurcharge1,tSurcharge2:tSurcharge2,tSurcharge3:tSurcharge3});
+        return (tvalue);
+    }
 
-    function _getRValues(uint256 tAmount, uint256 tFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
+    function _getRValues(uint256 tAmount, uint256 tFee,uint256 currentRate) private pure returns (uint256, uint256, uint256) {
         uint256 rAmount = tAmount.mul(currentRate);
         uint256 rFee = tFee.mul(currentRate);
         uint256 rTransferAmount = rAmount.sub(rFee);
@@ -777,45 +1032,87 @@ contract Fidometa is Context, IERC20, Ownable {
     function _getCurrentSupply() private view returns(uint256, uint256) {
         uint256 rSupply = _rTotal;
         uint256 tSupply = _tTotal;      
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply) return (_rTotal, _tTotal);
-            rSupply = rSupply.sub(_rOwned[_excluded[i]]);
-            tSupply = tSupply.sub(_tOwned[_excluded[i]]);
+        for (uint256 i = 0; i < _excludedFromReward.length; i++) {
+            if (_rOwned[_excludedFromReward[i]] > rSupply || _tOwned[_excludedFromReward[i]] > tSupply) return (_rTotal, _tTotal);
+            rSupply = rSupply.sub(_rOwned[_excludedFromReward[i]]);
+            tSupply = tSupply.sub(_tOwned[_excludedFromReward[i]]);
         }
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
-    
-  
-    
-    function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_taxFee).div(
-            10**2
-        );
+
+ function removeEcosysFee() private {
+        if(_ecoSysFee == 0) return;
+        _previousEcoSysFee = _ecoSysFee;
+        _ecoSysFee = 0;
     }
 
+     function removeSurcharge1() private {
+        if(_surcharge1 == 0) return;
+        _previousSurcharge1 = _surcharge1;
+        _surcharge1 = 0;
+    }
+
+     function removeSurcharge2() private {
+        if(_surcharge2 == 0) return;
+        _previousSurcharge2 = _surcharge2;
+        _surcharge2 = 0;
+    }
+     function removeSurcharge3() private {
+        if(_surcharge3 == 0) return;
+        _previousSurcharge3 = _surcharge3;
+        _surcharge3 = 0;
+    }
    
     
-    function removeAllFee() private {
-        if(_taxFee == 0) return;
-        
-        _previousTaxFee = _taxFee;
-        
-        _taxFee = 0;
+    function removeCommunityCharge() private {
+        if(_community_charge == 0) return;
+        _previousCommunityCharge = _community_charge;
+        _community_charge = 0;
     }
     
-    function restoreAllFee() private {
-        _taxFee = _previousTaxFee;
+    function restoreCommunityCharge() private {
+        _community_charge = _previousCommunityCharge;
     }
+
+     function restoreEcosysFee() private {
+        _ecoSysFee = _previousEcoSysFee;
+    }
+
+     function restoreSurcharge1() private {
+        _surcharge1 = _previousSurcharge1;
+    }
+
+         function restoreSurcharge2() private {
+        _surcharge2 = _previousSurcharge2;
+    }
+
+         function restoreSurcharge3() private {
+        _surcharge3 = _previousSurcharge3;
+    }
+
     
-    function isExcludedFromFee(address account) public view returns(bool) {
-        return _isExcludedFromFee[account];
+    function isExcludedFromCommunityCharge(address account) public view returns(bool) {
+        return _isExcludedFromCommunity_charge[account];
+    }
+
+     function isExcludedFromEcoSysFee(address account) public view returns(bool) {
+        return _isExcludedFromEcoSysFee[account];
+    }
+
+     function isExcludedFromSurcharge1(address account) public view returns(bool) {
+        return _isExcludedFromSurcharge1[account];
+    }
+    function isExcludedFromSurcharge2(address account) public view returns(bool) {
+        return _isExcludedFromSurcharge2[account];
+    }
+    function isExcludedFromSurcharge3(address account) public view returns(bool) {
+        return _isExcludedFromSurcharge3[account];
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
-
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -831,7 +1128,6 @@ contract Fidometa is Context, IERC20, Ownable {
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
         
-
         //   if some token is locked, and  amount is greater than allowed withdrawable amount than checking that if loking period is finished,
         //  if locking period is finised than allow transfer and update locked token amount. if it is still in locking period error will be thrown.
 
@@ -848,96 +1144,178 @@ contract Fidometa is Context, IERC20, Ownable {
                 locks[from].lockedToken  = lockedToken - required_from_locked_mode;
             }
         }
+
         //indicates if fee should be deducted from transfer
-        bool takeFee = true;
+        bool takeCommunityCharge = true;
+        bool takeEcosysFee = true;
+        bool takeSurcharge1 = true;
+        bool takeSurcharge2 = true;
+        bool takeSurcharge3 = true;
         
         //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromFee[from] || _isExcludedFromFee[to]){
-            takeFee = false;
+        if(_isExcludedFromCommunity_charge[from] || _isExcludedFromCommunity_charge[to]){
+            takeCommunityCharge = false;
+        }
+         //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(_isExcludedFromEcoSysFee[from] || _isExcludedFromEcoSysFee[to]){
+            takeEcosysFee = false;
+        }
+         //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(_isExcludedFromSurcharge1[from] || _isExcludedFromSurcharge1[to]){
+            takeSurcharge1 = false;
+        }
+           //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(_isExcludedFromSurcharge2[from] || _isExcludedFromSurcharge2[to]){
+            takeSurcharge2 = false;
+        }
+           //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(_isExcludedFromSurcharge3[from] || _isExcludedFromSurcharge3[to]){
+            takeSurcharge3 = false;
         }
 
-        if(takeFee){
-            uint256  _bankFeeAmount = amount.mul(bank_fee).div(10 ** 2);
-            amount = amount - _bankFeeAmount;
-             _tokenTransfer(from,bank_wallet,_bankFeeAmount,false);
+        _tokenTransfer(from,to,amount,takeCommunityCharge,takeEcosysFee,takeSurcharge1,takeSurcharge2,takeSurcharge3);
+
+    }
+
+     function _takeEcoSysCharge(uint256 tEcoSys) private {
+        if (tEcoSys > 0) {
+            uint256 currentRate = _getRate();
+            uint256 rEcosys = tEcoSys.mul(currentRate);
+            _rOwned[_ecoSysWallet] = _rOwned[_ecoSysWallet].add(rEcosys);
+            if (_isExcludedFromEcoSysFee[_ecoSysWallet])
+                _tOwned[_ecoSysWallet] = _tOwned[_ecoSysWallet].add(tEcoSys);
+            emit Transfer(_msgSender(), _ecoSysWallet, tEcoSys);
         }
-           
-        
-     //   _tokenTransfer(from, bank_wallet, _bankFeeAmount, false);
-      //transfer amount, it will take tax
+    }
 
-        _tokenTransfer(from,to,amount,takeFee);
+     function _takeSurcharge1(uint256 tSurcharge1) private {
+        if (tSurcharge1 > 0) {
+            uint256 currentRate = _getRate();
+            uint256 rSurcharge1 = tSurcharge1.mul(currentRate);
+            _rOwned[_surcharge_1_Wallet] = _rOwned[_surcharge_1_Wallet].add(rSurcharge1);
+            if (_isExcludedFromSurcharge1[_surcharge_1_Wallet])
+                _tOwned[_surcharge_1_Wallet] = _tOwned[_surcharge_1_Wallet].add(tSurcharge1);
+            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge1);
+        }
+    }
 
+    function _takeSurcharge2(uint256 tSurcharge2) private {
+        if (tSurcharge2 > 0) {
+            uint256 currentRate = _getRate();
+            uint256 rSurcharge2 = tSurcharge2.mul(currentRate);
+            _rOwned[_surcharge_2_Wallet] = _rOwned[_surcharge_2_Wallet].add(rSurcharge2);
+            if (_isExcludedFromSurcharge1[_surcharge_2_Wallet])
+                _tOwned[_surcharge_2_Wallet] = _tOwned[_surcharge_2_Wallet].add(tSurcharge2);
+            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge2);
+        }
+    }
+
+
+        function _takeSurcharge3(uint256 tSurcharge3) private {
+        if (tSurcharge3 > 0) {
+            uint256 currentRate = _getRate();
+            uint256 rSurcharge3 = tSurcharge3.mul(currentRate);
+            _rOwned[_surcharge_3_Wallet] = _rOwned[_surcharge_3_Wallet].add(rSurcharge3);
+            if (_isExcludedFromSurcharge3[_surcharge_3_Wallet])
+                _tOwned[_surcharge_3_Wallet] = _tOwned[_surcharge_3_Wallet].add(tSurcharge3);
+            emit Transfer(_msgSender(), _ecoSysWallet, tSurcharge3);
+        }
     }
 
     
 
     //this method is responsible for taking all fee, if takeFee is true
-    function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeFee) private {
-        if(!takeFee)
-            removeAllFee();
-        
-        if (_isExcluded[sender] && !_isExcluded[recipient]) {
+    function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeCommunityCharge,bool takeEcosysFee,bool takeSurcharge1,bool takeSurcharge2,bool takeSurcharge3) private {
+        if(!takeCommunityCharge)
+            removeCommunityCharge();
+
+        if(!takeEcosysFee)
+            removeEcosysFee();
+
+        if(!takeSurcharge1)
+            removeSurcharge1();
+
+        if(!takeSurcharge2)
+            removeSurcharge2();
+
+        if(!takeSurcharge3)
+            removeSurcharge3();
+
+         if (_isExcludedFromReward[sender] && !_isExcludedFromReward[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
-        } else 
-        if (!_isExcluded[sender]) {
+        } else if (!_isExcludedFromReward[sender] && _isExcludedFromReward[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
+        } else if (!_isExcludedFromReward[sender] && !_isExcludedFromReward[recipient]) {
             _transferStandard(sender, recipient, amount);
-        } else if (_isExcluded[sender] && _isExcluded[recipient]) {
+        } else if (_isExcludedFromReward[sender] && _isExcludedFromReward[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
             _transferStandard(sender, recipient, amount);
         }
         
-        if(!takeFee)
-            restoreAllFee();
+        if(!takeCommunityCharge)
+            restoreCommunityCharge();
+        if(!takeEcosysFee)
+            restoreEcosysFee();
+        if(!takeSurcharge1)
+            restoreSurcharge1();
+        if(!takeSurcharge2)
+            restoreSurcharge2();
+        if(!takeSurcharge3)
+            restoreSurcharge3();
     }
 
-     function calculateBankFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(bank_fee).div(
-            10**2
-        );
+     function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
+        (MValues memory mvalues) = _getValues(tAmount);
+        _tOwned[sender] = _tOwned[sender].sub(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount); 
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
 
-       function _takeBankFee(uint256 tBankFee) private {
-        _rOwned[bank_wallet] = _rOwned[bank_wallet].add(tBankFee);
-        _tOwned[bank_wallet] = _tOwned[bank_wallet].add(tBankFee);
+      function _transferToExcluded(address sender, address recipient, uint256 tAmount) private {
+        (MValues memory mvalues) = _getValues(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount); 
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
+
+      function _transferStandard(address sender, address recipient, uint256 tAmount) private {
+        (MValues memory mvalues) = _getValues(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
+    }  
+
 
     function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee) = _getValues(tAmount);
+         (MValues memory mvalues) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+       _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
     }
 
-    function _transferStandard(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }                             
-
-    function _transferToExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount); 
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
-
-    function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee) = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount); 
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
 }
