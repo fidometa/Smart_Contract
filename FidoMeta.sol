@@ -741,11 +741,16 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
      /** @dev Reduce the locking time, for already locked token
-     */ 
+     */
+    
     function reduceLockTime(address target_, uint256 timeindays) external onlyOwner{
         require(timeindays >= 0, "TimeInDays should be greater than 0");
         uint256  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No tokens lock found");
+        uint256  lockedTokenTime = locks[target_].timeInDays;
+        require(lockedTokenTime > 1, "Locking time can not be less than 1 Day");
+        require(timeindays < lockedTokenTime, "timeindays is more than current lock time");
+
         locks[target_].timeInDays = locks[target_].timeInDays - timeindays;
     }
 
