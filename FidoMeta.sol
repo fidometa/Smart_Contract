@@ -755,6 +755,7 @@ contract Fidometa is Context, IERC20, Ownable {
         require(amount >= 0, "Amount should be greater than 0");
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
+	require(amount <= lockedToken, "Invalid Amount input");
         if(locks[target_].lockedToken == amount){
             delete locks[target_];
         }else{
