@@ -701,14 +701,15 @@ contract Fidometa is Context, IERC20, Ownable {
       _mint(msg.sender, value);
     }
 
-    /** @dev burn some token from an account
+      /** @dev burn some token from an account
      */   
 	function _burn(address account, uint256 amount) internal onlyOwner {
     require(account != address(0), "ERC20: burn from the zero address");
-    _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+    require(amount <= balanceOf(account), "ERC20: burn amount exceeds balance");
     _tTotal = _tTotal.sub(amount);
     emit Transfer(account, address(0), amount);
   }
+
 
      /** @dev mint some token to an address
      */ 
