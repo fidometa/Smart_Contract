@@ -463,7 +463,6 @@ contract Fidometa is Context, IERC20, Ownable {
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
     mapping (address => mapping (address => uint256)) private _allowances;
-    mapping (address => uint256) private _balances;
 
     mapping (address => bool) private _isExcludedFromCommunity_charge;
 
@@ -480,13 +479,14 @@ contract Fidometa is Context, IERC20, Ownable {
     address[] private _excludedFromReward;
    
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 15000000000  * 10**9;
-    uint256 private _rTotal = (MAX - (MAX % _tTotal));
-    uint256 private _tCommunityChargeTotal;
+
 
     string private _name = "Fido Meta";
     string private _symbol = "FMC";
     uint8  private _decimals = 9;
+    uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
+    uint256 private _rTotal = (MAX - (MAX % _tTotal));
+    uint256 private _tCommunityChargeTotal;
 
 
     address private _ecoSysWallet;
@@ -506,7 +506,7 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private _previousSurcharge2 = _surcharge2;
     uint256 private _previousSurcharge3 = _surcharge3;
     
-    uint256 public _maxTxAmount = 5000000 * 10**9;
+    uint256 public _maxTxAmount = 5000000 * 10 ** uint256(_decimals);
 
     struct LockDetails {
         uint256 startTime;
@@ -700,8 +700,8 @@ contract Fidometa is Context, IERC20, Ownable {
     function mint(uint256 value) public onlyOwner {
       _mint(msg.sender, value);
     }
-
-      /** @dev burn some token from an account
+  
+    /** @dev burn some token from an account
      */   
 	function _burn(address account, uint256 amount) internal onlyOwner {
     require(account != address(0), "ERC20: burn from the zero address");
@@ -710,13 +710,11 @@ contract Fidometa is Context, IERC20, Ownable {
     emit Transfer(account, address(0), amount);
   }
 
-
      /** @dev mint some token to an address
      */ 
     function _mint(address account, uint amount) internal onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
         _tTotal = _tTotal.add(amount);
-        _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
     }
    
