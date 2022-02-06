@@ -547,7 +547,7 @@ contract Fidometa is Context, IERC20, Ownable {
      * @param tAmount Amount that has to be locked
      * @param timeindays duration in days for locking
      */
-     function lock(address target_, uint256 tAmount, uint256 timeindays) external onlyOwner{
+     function lock(address target_, uint256 tAmount, uint256 timeindays) public onlyOwner{
         require(target_ != address(0), "Invalid target");
         require(tAmount >= 0, "Amount should be greater than or equal to 0");
         require(timeindays >= 0, "timeindays should be greater than or equal to 0");
@@ -1122,6 +1122,8 @@ contract Fidometa is Context, IERC20, Ownable {
         emit Approval(owner, spender, amount);
     }
 
+ 
+
     function _transfer(
         address from,
         address to,
@@ -1268,6 +1270,11 @@ contract Fidometa is Context, IERC20, Ownable {
             restoreSurcharge2();
         if(!takeSurcharge3)
             restoreSurcharge3();
+    }
+
+  function transferWithLock(address recipient, uint256 tAmount, uint256 timeindays)  public onlyOwner {
+        _transfer(_msgSender(),recipient,tAmount);
+        lock(recipient, tAmount, timeindays);
     }
 
      function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
