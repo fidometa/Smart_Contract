@@ -1160,23 +1160,23 @@ contract Fidometa is Context, IERC20, Ownable {
         bool takeSurcharge3 = true;
         
         //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromCommunity_charge[from] || _isExcludedFromCommunity_charge[to]){
+        if(_isExcludedFromCommunity_charge[from]){
             takeCommunityCharge = false;
         }
          //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromEcoSysFee[from] || _isExcludedFromEcoSysFee[to]){
+        if(_isExcludedFromEcoSysFee[from]){
             takeEcosysFee = false;
         }
          //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromSurcharge1[from] || _isExcludedFromSurcharge1[to]){
+        if(_isExcludedFromSurcharge1[from]){
             takeSurcharge1 = false;
         }
            //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromSurcharge2[from] || _isExcludedFromSurcharge2[to]){
+        if(_isExcludedFromSurcharge2[from]){
             takeSurcharge2 = false;
         }
            //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromSurcharge3[from] || _isExcludedFromSurcharge3[to]){
+        if(_isExcludedFromSurcharge3[from]){
             takeSurcharge3 = false;
         }
 
@@ -1280,6 +1280,57 @@ contract Fidometa is Context, IERC20, Ownable {
      function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
         (MValues memory mvalues) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount); 
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
+    }
+
+      function _transferToExcluded(address sender, address recipient, uint256 tAmount) private {
+        (MValues memory mvalues) = _getValues(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount); 
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
+    }
+
+      function _transferStandard(address sender, address recipient, uint256 tAmount) private {
+        (MValues memory mvalues) = _getValues(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+        _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
+    }  
+
+
+    function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
+         (MValues memory mvalues) = _getValues(tAmount);
+        _tOwned[sender] = _tOwned[sender].sub(tAmount);
+        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
+        _takeEcoSysCharge(mvalues.tEcoSysFee);
+       _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge2(mvalues.tSurcharge2);
+        _takeSurcharge3(mvalues.tSurcharge3);
+        _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
+        emit Transfer(sender, recipient, mvalues.tTransferAmount);
+    }
+
+}_tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount); 
         _takeEcoSysCharge(mvalues.tEcoSysFee);
