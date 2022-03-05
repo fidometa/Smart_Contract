@@ -398,7 +398,7 @@ contract Ownable is Context {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-     /* This generates a public event on the blockchain that will notify clients */
+    /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
 
     /**
@@ -540,30 +540,6 @@ contract Fidometa is Context, IERC20, Ownable {
     event UnlockEvent(uint startTime, uint millis_days,uint expiry);
     mapping(address => LockDetails) public locks;
 
-
-
-    /* * @dev Lock a specific amount of tokens for specific days.
-     * @param target The target address.
-     * @param tAmount Amount that has to be locked
-     * @param timeindays duration in days for locking
-     */
-     function lock(address target_, uint256 tAmount, uint256 timeindays) public onlyOwner{
-        require(target_ != address(0), "Invalid target");
-        require(tAmount >= 0, "Amount should be greater than or equal to 0");
-        require(timeindays >= 0, "timeindays should be greater than or equal to 0");
-        uint256 balanceOfTarget = balanceOf(target_); 
-        require(balanceOfTarget != 0, "No token to lock.");
-        require(tAmount <= balanceOfTarget, "tAmount should be less than or equal to available balance");
-        uint256  lockedToken = locks[target_].lockedToken;
-        if(lockedToken > 0){
-            uint256 avl_to_lock =  balanceOfTarget - lockedToken;
-            require(tAmount <= avl_to_lock, "Not Sufficient token to lock.");
-            lockedToken = lockedToken + tAmount;
-            locks[target_].lockedToken = lockedToken;
-        }else{
-           locks[target_] = LockDetails(block.timestamp, timeindays, tAmount);
-        }
-    }
 
 
 
@@ -730,28 +706,6 @@ contract Fidometa is Context, IERC20, Ownable {
        return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
     }
 
-     /** @dev extend the locking time, for already locked token
-     */    
-     function extendLockTime(address target_, uint256 timeindays) external onlyOwner{
-        require(timeindays >= 0, "TimeInDays should be greater than 0");
-        uint256  lockedToken = locks[target_].lockedToken;
-        require(lockedToken >= 0, "No tokens lock found");
-        locks[target_].timeInDays = locks[target_].timeInDays + timeindays;
-    }
-
-     /** @dev Reduce the locking time, for already locked token
-     */
-    
-    function reduceLockTime(address target_, uint256 timeindays) external onlyOwner{
-        require(timeindays >= 0, "TimeInDays should be greater than 0");
-        uint256  lockedToken = locks[target_].lockedToken;
-        require(lockedToken >= 0, "No tokens lock found");
-        uint256  lockedTokenTime = locks[target_].timeInDays;
-        require(lockedTokenTime > 1, "Locking time can not be less than 1 Day");
-        require(timeindays < lockedTokenTime, "timeindays is more than current lock time");
-
-        locks[target_].timeInDays = locks[target_].timeInDays - timeindays;
-    }
 
      /** @dev unlock token by owner on any address
      */
@@ -759,7 +713,11 @@ contract Fidometa is Context, IERC20, Ownable {
         require(amount >= 0, "Amount should be greater than 0");
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
-	require(amount <= lockedToken, "Invalid Amount input");
+	    require(amount <= lockedToken, "Invalid Amount input");
+        uint256 millis_days = locks[target_].timeInDays * 1 days;
+        uint256 expiry = locks[target_].startTime + millis_days; 
+        require(block.timestamp >= expiry, "Can not unlock before locking period ends");
+
         if(locks[target_].lockedToken == amount){
             delete locks[target_];
         }else{
@@ -767,13 +725,6 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-     /**release all locks on token by owner 
-     */
-     function releaseLock(address target_) external onlyOwner{
-        uint  lockedToken = locks[target_].lockedToken;
-        require(lockedToken >= 0, "No locked token available");
-        delete locks[target_];
-    }
 
     constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
@@ -1271,6 +1222,35 @@ contract Fidometa is Context, IERC20, Ownable {
         if(!takeSurcharge3)
             restoreSurcharge3();
     }
+
+     /* * @dev Lock a specific amount of tokens for specific days.
+     * @param target The target address.
+     * @param tAmount Amount that has to be locked
+     * @param timeindays duration in days for locking
+     */
+     function lock(address target_, uint256 tAmount, uint256 timeindays) private onlyOwner{
+        require(target_ != address(0), "Invalid target");
+        require(tAmount >= 0, "Amount should be greater than or equal to 0");
+        require(timeindays >= 0, "timeindays should be greater than or equal to 0");
+        uint256 balanceOfTarget = balanceOf(target_); 
+        require(balanceOfTarget != 0, "No token to lock.");
+        require(tAmount <= balanceOfTarget, "tAmount should be less than or equal to available balance");
+        uint256  lockedToken = locks[target_].lockedToken;
+        if(lockedToken > 0){
+            uint256 avl_to_lock =  balanceOfTarget - lockedToken;
+            require(tAmount <= avl_to_lock, "Not Sufficient token to lock.");
+            lockedToken = lockedToken + tAmount;
+            locks[target_].lockedToken = lockedToken;
+        }else{
+           locks[target_] = LockDetails(block.timestamp, timeindays, tAmount);
+        }
+    }
+
+    /** @dev Transfer with lock
+     * @param recipient The recipient address.
+     * @param tAmount Amount that has to be locked
+     * @param timeindays duration in days for locking
+     */
 
   function transferWithLock(address recipient, uint256 tAmount, uint256 timeindays)  public onlyOwner {
         _transfer(_msgSender(),recipient,tAmount);
