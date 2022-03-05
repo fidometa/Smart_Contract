@@ -714,7 +714,7 @@ contract Fidometa is Context, IERC20, Ownable {
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
 	    require(amount <= lockedToken, "Invalid Amount input");
-        uint256 millis_days = locks[target_].timeInDays * 1 minutes;
+        uint256 millis_days = locks[target_].timeInDays * 1 days;
         uint256 expiry = locks[target_].startTime + millis_days; 
         require(block.timestamp >= expiry, "Can not unlock before locking period ends");
 
@@ -1093,7 +1093,7 @@ contract Fidometa is Context, IERC20, Ownable {
         if(lockedToken > 0){
             uint256 balance = balanceOf(from); 
             uint256 withdrawable = balance - lockedToken;
-            uint256 millis_days = locks[from].timeInDays * 1 minutes;
+            uint256 millis_days = locks[from].timeInDays * 1 days;
             uint256 expiry = locks[from].startTime + millis_days; 
             
             if(amount > withdrawable){
