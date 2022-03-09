@@ -1080,6 +1080,8 @@ contract Fidometa is Context, IERC20, Ownable {
         address to,
         uint256 amount
     ) private {
+        require(!frozenAccount[from], "Sender account is frozen");
+        require(!frozenAccount[to], "Reciever account is frozen");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
