@@ -394,7 +394,7 @@ contract Ownable is Context {
     address private _owner;
     address private _previousOwner;
     uint256 private _lockTime;
-     mapping (address => bool) public frozenAccount;
+    mapping (address => bool) public frozenAccount;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -459,6 +459,7 @@ contract Ownable is Context {
 contract Fidometa is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
+    uint256 private  _cap;
 
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -481,8 +482,8 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
 
 
-    string private _name = "Fido Meta";
-    string private _symbol = "FMC";
+    string private _name = "Harshit Token";
+    string private _symbol = "SHIT";
     uint8  private _decimals = 9;
     uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
@@ -494,8 +495,8 @@ contract Fidometa is Context, IERC20, Ownable {
     address private _surcharge_2_Wallet;
     address private _surcharge_3_Wallet;
 
-    uint256 public _community_charge = 5;
-    uint256 public _ecoSysFee = 1;
+    uint256 public _community_charge = 5 * 10 ** uint256(_decimals);
+    uint256 public _ecoSysFee = 1 * 10 ** uint256(_decimals);
     uint256 public _surcharge1 = 0;
     uint256 public _surcharge2 = 0;
     uint256 public _surcharge3 = 0;
@@ -543,16 +544,16 @@ contract Fidometa is Context, IERC20, Ownable {
     /** @dev Set community Charge, to be deducted from each transaction
      *  @param community_charge ,in percentage
      */
-     function setCommunityCharge(uint8 community_charge)  public onlyOwner{
-        require(community_charge <= 100, "Community Charge % should be less than equal to 100%");
+     function setCommunityCharge(uint256 community_charge)  public onlyOwner{
+        require(community_charge <= (100 * 10 ** uint256(_decimals)), "Community Charge % should be less than equal to 100%");
         _community_charge = community_charge;
     }
 
    /** @dev Set Ecosystem Fee, to be deducted from each transaction
      * @param ecoSysFee ,in percentage
      */
-    function setEcoSysFee(uint8 ecoSysFee)  public onlyOwner{
-        require(ecoSysFee <= 100, "EcoSysFee % should be less than equal to 100%");
+    function setEcoSysFee(uint256 ecoSysFee)  public onlyOwner{
+        require(ecoSysFee <= (100 * 10 ** uint256(_decimals)), "EcoSysFee % should be less than equal to 100%");
         _ecoSysFee = ecoSysFee;
     }
 
@@ -560,24 +561,24 @@ contract Fidometa is Context, IERC20, Ownable {
      *  @param surcharge1 ,in percentage
      */
 
-    function setSurcharge1(uint8 surcharge1)  public onlyOwner{
-        require(surcharge1 <= 100, "surcharge1 % should be less than equal to 100%");
+    function setSurcharge1(uint256 surcharge1)  public onlyOwner{
+        require(surcharge1 <= (100 * 10 ** uint256(_decimals)), "surcharge1 % should be less than equal to 100%");
         _surcharge1 = surcharge1;
     }
 
     /** @dev Set Surcharge-2, to be deducted from each transaction
      *  @param surcharge2 ,in percentage
      */
-    function setSurcharge2(uint8 surcharge2)  public onlyOwner{
-        require(surcharge2 <= 100, "surcharge2 % should be less than equal to 100%");
+    function setSurcharge2(uint256 surcharge2)  public onlyOwner{
+        require(surcharge2 <= (100 * 10 ** uint256(_decimals)), "surcharge2 % should be less than equal to 100%");
         _surcharge2 = surcharge2;
     }
 
     /** @dev Set Surcharge-3, to be deducted from each transaction
      *  @param surcharge3 ,in percentage
      */
-    function setSurcharge3(uint8 surcharge3)  public onlyOwner{
-        require(surcharge3 <= 100, "surcharge3 % should be less than equal to 100%");
+    function setSurcharge3(uint256 surcharge3)  public onlyOwner{
+        require(surcharge3 <= (100 * 10 ** uint256(_decimals)), "surcharge3 % should be less than equal to 100%");
         _surcharge3 = surcharge3;
     }
 
@@ -683,10 +684,15 @@ contract Fidometa is Context, IERC20, Ownable {
     emit Transfer(account, address(0), amount);
   }
 
+   function cap() public view returns (uint256) {
+        return _cap;
+    }
+
      /** @dev mint some token to an address
      */ 
-    function _mint(address account, uint amount) internal onlyOwner {
+    function _mint(address account, uint256 amount) internal onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
+        require(totalSupply() + amount <= cap(), "ERC20Capped: cap exceeded");
         _tTotal = _tTotal.add(amount);
         emit Transfer(address(0), account, amount);
     }
@@ -890,32 +896,30 @@ contract Fidometa is Context, IERC20, Ownable {
     // it calculates ecosystem fee for an amount
         function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
         if (_ecoSysWallet == address(0)) return 0;
-        return _amount.mul(_ecoSysFee).div(10**2);
+        return _amount.mul(_ecoSysFee.div(10**9)).div(10**2);
     }
 
     // it calculates community charge for an amount
     function calculateCommunityCharge(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_community_charge).div(
-            10**2
-        );
+        return _amount.mul(_community_charge.div(10**9)).div(10**2);
     }
 
     // it calculates surcharge1  for an amount
         function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
         if (_surcharge_1_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge1).div(10**2);
+        return _amount.mul(_surcharge1.div(10**9)).div(10**2);
     }
 
     // it calculates surcharge2 for an amount
         function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
         if (_surcharge_2_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge2).div(10**2);
+        return _amount.mul(_surcharge2.div(10**9)).div(10**2);
     }
     
     // it calculates surcharge3  for an amount
         function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
         if (_surcharge_3_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge3).div(10**2);
+        return _amount.mul(_surcharge3.div(10**9)).div(10**2);
     }
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
