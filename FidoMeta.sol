@@ -538,7 +538,7 @@ contract Fidometa is Context, IERC20, Ownable {
 
 
     event UnlockEvent(uint startTime, uint millis_days,uint expiry);
-    mapping(address => LockDetails) public locks;
+    mapping(address => LockDetails) private locks;
 
 
 
@@ -701,7 +701,7 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256  startTimeOfLockedToken = locks[target_].startTime;
         uint256  timeInDaysOfLockedToken = locks[target_].timeInDays;
         uint256  lockedTokenQuantity = locks[target_].lockedToken;
-        uint millis_days = timeInDaysOfLockedToken * 1 days;
+        uint millis_days = timeInDaysOfLockedToken * 1 minutes;
         uint expiry = startTimeOfLockedToken + millis_days;
        return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
     }
@@ -714,10 +714,9 @@ contract Fidometa is Context, IERC20, Ownable {
         uint  lockedToken = locks[target_].lockedToken;
         require(lockedToken >= 0, "No locked token available");
 	    require(amount <= lockedToken, "Invalid Amount input");
-        uint256 millis_days = locks[target_].timeInDays * 1 days;
+        uint256 millis_days = locks[target_].timeInDays * 1 minutes;
         uint256 expiry = locks[target_].startTime + millis_days; 
         require(block.timestamp >= expiry, "Can not unlock before locking period ends");
-
         if(locks[target_].lockedToken == amount){
             delete locks[target_];
         }else{
@@ -1081,7 +1080,6 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 amount
     ) private {
         require(!frozenAccount[from], "Sender account is frozen");
-        require(!frozenAccount[to], "Reciever account is frozen");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
@@ -1095,7 +1093,7 @@ contract Fidometa is Context, IERC20, Ownable {
         if(lockedToken > 0){
             uint256 balance = balanceOf(from); 
             uint256 withdrawable = balance - lockedToken;
-            uint256 millis_days = locks[from].timeInDays * 1 days;
+            uint256 millis_days = locks[from].timeInDays * 1 minutes;
             uint256 expiry = locks[from].startTime + millis_days; 
             
             if(amount > withdrawable){
@@ -1231,16 +1229,8 @@ contract Fidometa is Context, IERC20, Ownable {
      * @param timeindays duration in days for locking
      */
      function lock(address target_, uint256 tAmount, uint256 timeindays) private onlyOwner{
-        require(target_ != address(0), "Invalid target");
-        require(tAmount >= 0, "Amount should be greater than or equal to 0");
-        require(timeindays >= 0, "timeindays should be greater than or equal to 0");
-        uint256 balanceOfTarget = balanceOf(target_); 
-        require(balanceOfTarget != 0, "No token to lock.");
-        require(tAmount <= balanceOfTarget, "tAmount should be less than or equal to available balance");
         uint256  lockedToken = locks[target_].lockedToken;
         if(lockedToken > 0){
-            uint256 avl_to_lock =  balanceOfTarget - lockedToken;
-            require(tAmount <= avl_to_lock, "Not Sufficient token to lock.");
             lockedToken = lockedToken + tAmount;
             locks[target_].lockedToken = lockedToken;
         }else{
@@ -1255,6 +1245,9 @@ contract Fidometa is Context, IERC20, Ownable {
      */
 
   function transferWithLock(address recipient, uint256 tAmount, uint256 timeindays)  public onlyOwner {
+        require(recipient != address(0), "Invalid target");
+        require(tAmount >= 0, "Amount should be greater than or equal to 0");
+        require(timeindays >= 0, "timeindays should be greater than or equal to 0");
         _transfer(_msgSender(),recipient,tAmount);
         lock(recipient, tAmount, timeindays);
     }
