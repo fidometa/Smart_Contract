@@ -535,9 +535,6 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tSurcharge3;
     }
 
-
-
-    event UnlockEvent(uint startTime, uint millis_days,uint expiry);
     mapping(address => LockDetails) private locks;
 
 
@@ -705,25 +702,6 @@ contract Fidometa is Context, IERC20, Ownable {
         uint expiry = startTimeOfLockedToken + millis_days;
        return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
     }
-
-
-     /** @dev unlock token by owner on any address
-     */
-     function unlockToken(address target_, uint256 amount) external onlyOwner{
-        require(amount >= 0, "Amount should be greater than 0");
-        uint  lockedToken = locks[target_].lockedToken;
-        require(lockedToken >= 0, "No locked token available");
-	    require(amount <= lockedToken, "Invalid Amount input");
-        uint256 millis_days = locks[target_].timeInDays * 1 minutes;
-        uint256 expiry = locks[target_].startTime + millis_days; 
-        require(block.timestamp >= expiry, "Can not unlock before locking period ends");
-        if(locks[target_].lockedToken == amount){
-            delete locks[target_];
-        }else{
-            locks[target_].lockedToken = locks[target_].lockedToken - amount;
-        }
-    }
-
 
     constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
