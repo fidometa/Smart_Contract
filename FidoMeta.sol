@@ -482,8 +482,8 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
 
 
-    string private _name = "Fido Meta";
-    string private _symbol = "FIDO";
+    string private _name = "Harshit Token";
+    string private _symbol = "SHIT";
     uint8  private _decimals = 9;
     uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
@@ -495,9 +495,9 @@ contract Fidometa is Context, IERC20, Ownable {
     address private _surcharge_2_Wallet;
     address private _surcharge_3_Wallet;
 
-    uint256 public _community_charge = 5 * 10 ** uint256(_decimals);
-    uint256 public _ecoSysFee = 1 * 10 ** uint256(_decimals);
-    uint256 public _surcharge1 = 0;
+    uint256 public _community_charge = 3 * 10 ** uint256(_decimals);
+    uint256 public _ecoSysFee = 15 * 10 ** 8;
+    uint256 public _surcharge1 = 5 * 10 ** 8;
     uint256 public _surcharge2 = 0;
     uint256 public _surcharge3 = 0;
 
@@ -895,7 +895,6 @@ contract Fidometa is Context, IERC20, Ownable {
   
     // it calculates ecosystem fee for an amount
         function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
-        if (_ecoSysWallet == address(0)) return 0;
         return _amount.mul(_ecoSysFee.div(10**9)).div(10**2);
     }
 
@@ -906,19 +905,16 @@ contract Fidometa is Context, IERC20, Ownable {
 
     // it calculates surcharge1  for an amount
         function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_1_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge1.div(10**9)).div(10**2);
     }
 
     // it calculates surcharge2 for an amount
         function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_2_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge2.div(10**9)).div(10**2);
     }
     
     // it calculates surcharge3  for an amount
         function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_3_Wallet == address(0)) return 0;
         return _amount.mul(_surcharge3.div(10**9)).div(10**2);
     }
 
