@@ -26,3 +26,9 @@ Features:
 12. A user can check how much amount is locked in their wallet and for how much time.
 13. Token can be burn/mint by admin only.
 14. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
+
+
+**Setup**
+After deployment
+1. Exclude owner wallet from Reward
+2. 
