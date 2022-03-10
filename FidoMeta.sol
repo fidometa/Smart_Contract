@@ -459,7 +459,7 @@ contract Ownable is Context {
 contract Fidometa is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
-    uint256 private  _cap;
+
 
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -486,6 +486,7 @@ contract Fidometa is Context, IERC20, Ownable {
     string private _symbol = "SHIT";
     uint8  private _decimals = 9;
     uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
+    uint256 private  _cap;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tCommunityChargeTotal;
 
@@ -728,6 +729,8 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[owner()] = true;
         _isExcludedFromSurcharge3[address(this)] = true;
 
+        _cap = _tTotal;
+
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -895,27 +898,27 @@ contract Fidometa is Context, IERC20, Ownable {
   
     // it calculates ecosystem fee for an amount
         function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_ecoSysFee.div(10**9)).div(10**2);
+        return _amount.mul(_ecoSysFee).div(10**11);
     }
 
     // it calculates community charge for an amount
     function calculateCommunityCharge(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_community_charge.div(10**9)).div(10**2);
+        return _amount.mul(_community_charge).div(10**11);
     }
 
     // it calculates surcharge1  for an amount
         function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_surcharge1.div(10**9)).div(10**2);
+        return _amount.mul(_surcharge1).div(10**11);
     }
 
     // it calculates surcharge2 for an amount
         function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_surcharge2.div(10**9)).div(10**2);
+        return _amount.mul(_surcharge2).div(10**11);
     }
     
     // it calculates surcharge3  for an amount
         function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_surcharge3.div(10**9)).div(10**2);
+        return _amount.mul(_surcharge3).div(10**11);
     }
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -1276,7 +1279,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
         _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
         _takeEcoSysCharge(mvalues.tEcoSysFee);
-       _takeSurcharge1(mvalues.tSurcharge1);
+        _takeSurcharge1(mvalues.tSurcharge1);
         _takeSurcharge2(mvalues.tSurcharge2);
         _takeSurcharge3(mvalues.tSurcharge3);
         _reflectFee(mvalues.rCommunityCharge, mvalues.tCommunityCharge);
