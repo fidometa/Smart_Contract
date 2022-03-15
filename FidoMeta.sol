@@ -482,8 +482,8 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
 
 
-    string private _name = "Harshit Token";
-    string private _symbol = "SHIT";
+    string private _name = "Fido Meta";
+    string private _symbol = "FIDO";
     uint8  private _decimals = 9;
     uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
     uint256 private  _cap;
@@ -510,10 +510,12 @@ contract Fidometa is Context, IERC20, Ownable {
     
     uint256 public _maxTxAmount = 5000000 * 10 ** uint256(_decimals);
 
-    struct LockDetails {
+      struct LockDetails {
         uint256 startTime;
-        uint256 timeInDays;
+        uint256 initialLock;
         uint256 lockedToken;
+        uint256 remainedToken;
+        uint256 monthCount;
     }
 
     struct TValues {
@@ -537,7 +539,7 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tSurcharge3;
     }
 
-    mapping(address => LockDetails) private locks;
+    mapping(address => LockDetails) public locks;
 
 
 
@@ -697,18 +699,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _tTotal = _tTotal.add(amount);
         emit Transfer(address(0), account, amount);
     }
-   
-    /** @dev show the startTime, locked amount and expiry of a target
-     */ 
-     function lockDetail(address target_) public view returns(uint startTime, uint lockedToken,uint unlockDateEpoch) {
-        require(target_ != address(0), "Invalid target");
-        uint256  startTimeOfLockedToken = locks[target_].startTime;
-        uint256  timeInDaysOfLockedToken = locks[target_].timeInDays;
-        uint256  lockedTokenQuantity = locks[target_].lockedToken;
-        uint millis_days = timeInDaysOfLockedToken * 1 minutes;
-        uint expiry = startTimeOfLockedToken + millis_days;
-       return(startTimeOfLockedToken,lockedTokenQuantity,expiry);
-    }
+ 
 
     constructor ()  {
         _rOwned[_msgSender()] = _rTotal;
@@ -794,7 +785,7 @@ contract Fidometa is Context, IERC20, Ownable {
         return _tCommunityChargeTotal;
     }
 
-    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
+    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) private view returns(uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
             (MValues memory m) = _getValues(tAmount);
@@ -805,7 +796,7 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-    function tokenFromReflection(uint256 rAmount) public view returns(uint256) {
+    function tokenFromReflection(uint256 rAmount) private view returns(uint256) {
         require(rAmount <= _rTotal, "Amount must be less than total reflections");
         uint256 currentRate =  _getRate();
         return rAmount.div(currentRate);
@@ -1063,25 +1054,15 @@ contract Fidometa is Context, IERC20, Ownable {
         require(!frozenAccount[from], "Sender account is frozen");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
+        require(balanceOf(from) > amount, "ERC20: Insufficient Fund ");
         require(amount > 0, "Transfer amount must be greater than zero");
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
-        
-        //   if some token is locked, and  amount is greater than allowed withdrawable amount than checking that if loking period is finished,
-        //  if locking period is finised than allow transfer and update locked token amount. if it is still in locking period error will be thrown.
+    
 
-        uint256 lockedToken = locks[from].lockedToken;
-        if(lockedToken > 0){
-            uint256 balance = balanceOf(from); 
-            uint256 withdrawable = balance - lockedToken;
-            uint256 millis_days = locks[from].timeInDays * 1 minutes;
-            uint256 expiry = locks[from].startTime + millis_days; 
-            
-            if(amount > withdrawable){
-                require(block.timestamp >= expiry, "Not Enough unlocked token available");
-                uint256 required_from_locked_mode = amount - withdrawable;
-                locks[from].lockedToken  = lockedToken - required_from_locked_mode;
-            }
+        if(locks[from].lockedToken > 0){
+            uint256 withdrawable = balanceOf(from) - locks[from].remainedToken;
+            require(amount <= withdrawable, "Not enough Unlocked token Available");
         }
 
         //indicates if fee should be deducted from transfer
@@ -1204,33 +1185,49 @@ contract Fidometa is Context, IERC20, Ownable {
             restoreSurcharge3();
     }
 
-     /* * @dev Lock a specific amount of tokens for specific days.
-     * @param target The target address.
-     * @param tAmount Amount that has to be locked
-     * @param timeindays duration in days for locking
-     */
-     function lock(address target_, uint256 tAmount, uint256 timeindays) private onlyOwner{
-        uint256  lockedToken = locks[target_].lockedToken;
-        if(lockedToken > 0){
-            lockedToken = lockedToken + tAmount;
-            locks[target_].lockedToken = lockedToken;
-        }else{
-           locks[target_] = LockDetails(block.timestamp, timeindays, tAmount);
-        }
-    }
+   function unlock(address target_) external {
+        require(target_ != address(0), "Invalid target");
+        uint256 startTime     = locks[target_].startTime;
+        uint256 lockedToken   = locks[target_].lockedToken;
+        uint256 remainedToken = locks[target_].remainedToken;
+        uint256 monthCount    = locks[target_].monthCount;
+        uint256 initialLock    = locks[target_].initialLock;
+        
+
+        require(remainedToken != 0, "All tokens are unlocked");
+        
+        require(block.timestamp > startTime + (initialLock * 1   ), "UnLocking period is not opened");
+        uint256 timePassed = block.timestamp - (startTime + (initialLock * 1 days)); 
+
+        uint256 monthNumber = (uint256(timePassed) + (uint256(30 days) - 1)) / uint256(30 days); 
+
+        uint256 remainedMonth = monthNumber - monthCount;
+        
+        if(remainedMonth > 10)
+            remainedMonth = 10;
+        require(remainedMonth > 0, "Releasable token till now is released");
+
+        uint256 receivableToken = (lockedToken * (remainedMonth*10))/ 100;
+
+        locks[target_].monthCount    += remainedMonth;
+        locks[target_].remainedToken -= receivableToken;
+        
+    } 
 
     /** @dev Transfer with lock
      * @param recipient The recipient address.
      * @param tAmount Amount that has to be locked
-     * @param timeindays duration in days for locking
+     * @param initialLock duration in days for locking
      */
 
-  function transferWithLock(address recipient, uint256 tAmount, uint256 timeindays)  public onlyOwner {
+  function transferWithLock(address recipient, uint256 tAmount, uint256 initialLock)  public onlyOwner {
         require(recipient != address(0), "Invalid target");
+        require(locks[recipient].lockedToken == 0, "This address is already in vesting period");
         require(tAmount >= 0, "Amount should be greater than or equal to 0");
-        require(timeindays >= 0, "timeindays should be greater than or equal to 0");
+        require(initialLock >= 0, "timeindays should be greater than or equal to 0");
         _transfer(_msgSender(),recipient,tAmount);
-        lock(recipient, tAmount, timeindays);
+        locks[recipient] = LockDetails(block.timestamp, initialLock, tAmount, tAmount, 0);
+        emit Transfer(_msgSender(), recipient, tAmount);
     }
 
      function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
