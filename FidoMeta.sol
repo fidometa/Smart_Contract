@@ -785,7 +785,7 @@ contract Fidometa is Context, IERC20, Ownable {
         return _tCommunityChargeTotal;
     }
 
-    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
+    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) private view returns(uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
             (MValues memory m) = _getValues(tAmount);
@@ -796,7 +796,7 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-    function tokenFromReflection(uint256 rAmount) public view returns(uint256) {
+    function tokenFromReflection(uint256 rAmount) private view returns(uint256) {
         require(rAmount <= _rTotal, "Amount must be less than total reflections");
         uint256 currentRate =  _getRate();
         return rAmount.div(currentRate);
@@ -1196,10 +1196,10 @@ contract Fidometa is Context, IERC20, Ownable {
 
         require(remainedToken != 0, "All tokens are unlocked");
         
-        require(block.timestamp > startTime + (initialLock * 1 seconds), "UnLocking period is not opened");
-        uint256 timePassed = block.timestamp - (startTime + (initialLock * 1 seconds)); 
+        require(block.timestamp > startTime + (initialLock * 1   ), "UnLocking period is not opened");
+        uint256 timePassed = block.timestamp - (startTime + (initialLock * 1 days)); 
 
-        uint256 monthNumber = (uint256(timePassed) + (uint256(30 seconds) - 1)) / uint256(30 seconds); 
+        uint256 monthNumber = (uint256(timePassed) + (uint256(30 days) - 1)) / uint256(30 days); 
 
         uint256 remainedMonth = monthNumber - monthCount;
         
