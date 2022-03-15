@@ -482,8 +482,8 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
 
 
-    string private _name = "Harshit Token";
-    string private _symbol = "SHIT";
+    string private _name = "Fido Meta";
+    string private _symbol = "FIDO";
     uint8  private _decimals = 9;
     uint256 private _tTotal = 15000000000  * 10 ** uint256(_decimals);
     uint256 private  _cap;
