@@ -5,10 +5,12 @@ Special Terms:
 1. community_charge - This is the percentage to be deducted from each transaction and reflected to all holders. deafult is 3%.
 2. ecoSysFee  - Percentage to be deducted from each transaction. deafult is 1,5%
 3. ecoSysWallet - A special wallet where some percentage (ecoSysFee) from each transaction is deposited.These tokens will be later shared in charity.
-4. surcharge1,surcharge2,surcharge3 - there are three different surcharge for later purpose. Initially is 0%.
-5. surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet - Three wallet to take surcharge.
-6. max_transaction_amount - This is the maximum amount of token transaction that a user can send.
-7. setMaxTxPercent - Percentage of total supply a user allowed to send at once.
+4. surcharge1 - it is set to 0.5% to be send to burn wallet after each transaction
+5. surcharge2,surcharge3 - there are two addtional surcharge for later purpose. Initially is 0%.
+6. surcharge_1_Wallet - this wallet is set for burn address
+7. surcharge_2_Wallet,surcharge_3_Wallet - Three corresponding wallet for surcharge2 and surcharge3.
+8. max_transaction_amount - This is the maximum amount of token transaction that a user can send.
+9. setMaxTxPercent - Percentage of total supply a user allowed to send at once.
 
 Features:
 
