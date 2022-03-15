@@ -14,20 +14,20 @@ Special Terms:
 
 Features:
 
-1. 3% community fee is deducted from each transacion and reflected to all holders for passive income.
-2. 1.5% is deducted from each transaction is deposited to ecosystem wallet.
-3. community_charge, ecoSysFee,ecoSysWallet,surcharge1,surcharge2,surcharge3,surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet and bank wallet can be set by admin.
-4. An Address can be freezed to send/receive token by admin.
-5. An address can be include/removed from getting reflection/community distribution by admin.
-6. An address can be include/removed from communityCharge,ecoSysFee,4. surcharge1,surcharge2,surcharge3 deduction by admin.
-7. Some amount of token can be locked in any address for a given days. All tokens along with locked and unlocked will can be shown in user wallet but only unlocked token will be able to withdraw. This can be done by admin only.
-8. Tokens in wallet can be locked and unlocked many times as per requirement by admin.
-9. Locking time can be reduced or extend anytime by admin only.
-10. Using 'release_lock' all locked token can be released by admin.
-11. Using 'unlockToken' some amount of token can be unlocked by admin only.
-12. A user can check how much amount is locked in their wallet and for how much time.
-13. Token can be burn/mint by admin only.
-14. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
+1. 5% total charge including communitycharge,ecosystemcharge,surcharge1 shall be deducted if sender is not excluded from the corresponding fees.
+2. 3% community fee is deducted from each transacion and reflected to all holders for passive income.
+3. 1.5% is deducted from each transaction is deposited to ecosystem wallet.
+4. 0.5% is duducted and send to burn address
+5. community_charge, ecoSysFee,ecoSysWallet,surcharge1,surcharge2,surcharge3,surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet can be set only by admin.
+6. An Address can be freezed to send token by admin.
+7. An address can be include/removed from getting reflection/community distribution/reward by admin.
+8. An address can be include/removed from communityCharge,ecoSysFee,surcharge1,surcharge2,surcharge3 deduction by admin.
+9. Some amount of token can be transfer with lock by admin in any address for a given days. Locking/vesting works as below
+10. Locked token will be locked for some initial period say 3 Months, After completion of initial period a user can unlock their token 20% each month.
+11. All tokens along with locked and unlocked will can be shown in user wallet but only unlocked token will be able to withdraw.
+16. A user can check how much amount is locked via bscscan explored web3
+17. Token can be burn/mint by admin only but can not exceed the initial total supply.
+18. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
 
 
 **Setup**
