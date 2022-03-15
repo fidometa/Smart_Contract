@@ -1054,16 +1054,15 @@ contract Fidometa is Context, IERC20, Ownable {
         require(!frozenAccount[from], "Sender account is frozen");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
+        require(balanceOf(from) > amount, "ERC20: Insufficient Fund ");
         require(amount > 0, "Transfer amount must be greater than zero");
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
-        
-        //   if some token is locked, and  amount is greater than allowed withdrawable amount than checking that if loking period is finished,
-        //  if locking period is finised than allow transfer and update locked token amount. if it is still in locking period error will be thrown.
+    
 
         if(locks[from].lockedToken > 0){
             uint256 withdrawable = balanceOf(from) - locks[from].remainedToken;
-            require(amount <= withdrawable, "Some Tokens are in vesting period");
+            require(amount <= withdrawable, "Not enough Unlocked token Available");
         }
 
         //indicates if fee should be deducted from transfer
@@ -1186,29 +1185,29 @@ contract Fidometa is Context, IERC20, Ownable {
             restoreSurcharge3();
     }
 
-   function unlock(address target_) public{
+   function unlock(address target_) external {
         require(target_ != address(0), "Invalid target");
-        uint startTime     = locks[target_].startTime;
-        uint lockedToken   = locks[target_].lockedToken;
-        uint remainedToken = locks[target_].remainedToken;
-        uint monthCount    = locks[target_].monthCount;
-        uint initialLock    = locks[target_].initialLock;
+        uint256 startTime     = locks[target_].startTime;
+        uint256 lockedToken   = locks[target_].lockedToken;
+        uint256 remainedToken = locks[target_].remainedToken;
+        uint256 monthCount    = locks[target_].monthCount;
+        uint256 initialLock    = locks[target_].initialLock;
         
 
         require(remainedToken != 0, "All tokens are unlocked");
         
         require(block.timestamp > startTime + (initialLock * 1 seconds), "UnLocking period is not opened");
-        uint timePassed = block.timestamp - (startTime + (initialLock * 1 seconds)); 
+        uint256 timePassed = block.timestamp - (startTime + (initialLock * 1 seconds)); 
 
-        uint monthNumber = (uint(timePassed) + (uint(30 seconds) - 1)) / uint(30 seconds); 
+        uint256 monthNumber = (uint256(timePassed) + (uint256(30 seconds) - 1)) / uint256(30 seconds); 
 
-        uint remainedMonth = monthNumber - monthCount;
+        uint256 remainedMonth = monthNumber - monthCount;
         
         if(remainedMonth > 10)
             remainedMonth = 10;
         require(remainedMonth > 0, "Releasable token till now is released");
 
-        uint receivableToken = (lockedToken * (remainedMonth*10))/ 100;
+        uint256 receivableToken = (lockedToken * (remainedMonth*10))/ 100;
 
         locks[target_].monthCount    += remainedMonth;
         locks[target_].remainedToken -= receivableToken;
