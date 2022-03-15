@@ -12,7 +12,7 @@ Special Terms:
 8. max_transaction_amount - This is the maximum amount of token transaction that a user can send.
 9. setMaxTxPercent - Percentage of total supply a user allowed to send at once.
 
-Features:
+**Features:**
 
 1. 5% total charge including communitycharge,ecosystemcharge,surcharge1 shall be deducted if sender is not excluded from the corresponding fees.
 2. 3% community fee is deducted from each transacion and reflected to all holders for passive income.
@@ -25,9 +25,9 @@ Features:
 9. Some amount of token can be transfer with lock by admin in any address for a given days. Locking/vesting works as below
 10. Locked token will be locked for some initial period say 3 Months, After completion of initial period a user can unlock their token 20% each month.
 11. All tokens along with locked and unlocked will can be shown in user wallet but only unlocked token will be able to withdraw.
-16. A user can check how much amount is locked via bscscan explored web3
-17. Token can be burn/mint by admin only but can not exceed the initial total supply.
-18. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
+12. A user can check how much amount is locked via bscscan explored web3
+13. Token can be burn/mint by admin only but can not exceed the initial total supply.
+14. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
 
 
 **Setup**
