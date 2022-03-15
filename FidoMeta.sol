@@ -496,9 +496,9 @@ contract Fidometa is Context, IERC20, Ownable {
     address private _surcharge_2_Wallet;
     address private _surcharge_3_Wallet;
 
-	uint256 public _community_charge = 5;
-    uint256 public _ecoSysFee = 1;
-    uint256 public _surcharge1 = 0;
+    uint256 public _community_charge = 3 * 10 ** uint256(_decimals);
+    uint256 public _ecoSysFee = 15 * 10 ** 8;
+    uint256 public _surcharge1 = 5 * 10 ** 8;
     uint256 public _surcharge2 = 0;
     uint256 public _surcharge3 = 0;
 
@@ -546,7 +546,7 @@ contract Fidometa is Context, IERC20, Ownable {
      *  @param community_charge ,in percentage
      */
      function setCommunityCharge(uint256 community_charge)  public onlyOwner{
-        require(community_charge <= 100, "Community Charge % should be less than equal to 100%");
+        require(community_charge <= (100 * 10 ** uint256(_decimals)), "Community Charge % should be less than equal to 100%");
         _community_charge = community_charge;
     }
 
@@ -554,7 +554,7 @@ contract Fidometa is Context, IERC20, Ownable {
      * @param ecoSysFee ,in percentage
      */
     function setEcoSysFee(uint256 ecoSysFee)  public onlyOwner{
-        require(ecoSysFee <= 100 , "EcoSysFee % should be less than equal to 100%");
+        require(ecoSysFee <= (100 * 10 ** uint256(_decimals)), "EcoSysFee % should be less than equal to 100%");
         _ecoSysFee = ecoSysFee;
     }
 
@@ -563,7 +563,7 @@ contract Fidometa is Context, IERC20, Ownable {
      */
 
     function setSurcharge1(uint256 surcharge1)  public onlyOwner{
-        require(surcharge1 <= 100 , "surcharge1 % should be less than equal to 100%");
+        require(surcharge1 <= (100 * 10 ** uint256(_decimals)), "surcharge1 % should be less than equal to 100%");
         _surcharge1 = surcharge1;
     }
 
@@ -571,7 +571,7 @@ contract Fidometa is Context, IERC20, Ownable {
      *  @param surcharge2 ,in percentage
      */
     function setSurcharge2(uint256 surcharge2)  public onlyOwner{
-        require(surcharge2 <= 100, "surcharge2 % should be less than equal to 100%");
+        require(surcharge2 <= (100 * 10 ** uint256(_decimals)), "surcharge2 % should be less than equal to 100%");
         _surcharge2 = surcharge2;
     }
 
@@ -579,7 +579,7 @@ contract Fidometa is Context, IERC20, Ownable {
      *  @param surcharge3 ,in percentage
      */
     function setSurcharge3(uint256 surcharge3)  public onlyOwner{
-        require(surcharge3 <= 100, "surcharge3 % should be less than equal to 100%");
+        require(surcharge3 <= (100 * 10 ** uint256(_decimals)), "surcharge3 % should be less than equal to 100%");
         _surcharge3 = surcharge3;
     }
 
@@ -898,31 +898,27 @@ contract Fidometa is Context, IERC20, Ownable {
   
     // it calculates ecosystem fee for an amount
         function calculateEcoSysFee(uint256 _amount) private view returns (uint256) {
-        if (_ecoSysWallet == address(0)) return 0;
-        return _amount.mul(_ecoSysFee).div(10**2);
+        return _amount.mul(_ecoSysFee).div(10**11);
     }
 
     // it calculates community charge for an amount
     function calculateCommunityCharge(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_community_charge).div(10**2);
+        return _amount.mul(_community_charge).div(10**11);
     }
 
     // it calculates surcharge1  for an amount
         function calculateSurcharge1(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_1_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge1).div(10**2);
+        return _amount.mul(_surcharge1).div(10**11);
     }
 
     // it calculates surcharge2 for an amount
         function calculateSurcharge2(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_2_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge2).div(10**2);
+        return _amount.mul(_surcharge2).div(10**11);
     }
     
     // it calculates surcharge3  for an amount
         function calculateSurcharge3(uint256 _amount) private view returns (uint256) {
-        if (_surcharge_3_Wallet == address(0)) return 0;
-        return _amount.mul(_surcharge3).div(10**2);
+        return _amount.mul(_surcharge3).div(10**11);
     }
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -1082,9 +1078,13 @@ contract Fidometa is Context, IERC20, Ownable {
             uint256 expiry = locks[from].startTime + millis_days; 
             
             if(amount > withdrawable){
-                require(block.timestamp >= expiry, "Not Enough unlocked token available");
-                uint256 required_from_locked_mode = amount - withdrawable;
-                locks[from].lockedToken  = lockedToken - required_from_locked_mode;
+                require(block.timestamp >= expiry, "Tokens are in vesting period");
+                // uint256 required_from_locked_mode = amount - withdrawable;
+                if(amount >= lockedToken){
+                    delete locks[from];
+                }else{
+                    locks[from].lockedToken  = lockedToken - amount;
+                }
             }
         }
 
@@ -1218,6 +1218,7 @@ contract Fidometa is Context, IERC20, Ownable {
         if(lockedToken > 0){
             lockedToken = lockedToken + tAmount;
             locks[target_].lockedToken = lockedToken;
+            locks[target_] = LockDetails(locks[target_].startTime, locks[target_].timeInDays, tAmount);
         }else{
            locks[target_] = LockDetails(block.timestamp, timeindays, tAmount);
         }
@@ -1235,6 +1236,7 @@ contract Fidometa is Context, IERC20, Ownable {
         require(timeindays >= 0, "timeindays should be greater than or equal to 0");
         _transfer(_msgSender(),recipient,tAmount);
         lock(recipient, tAmount, timeindays);
+         emit Transfer(_msgSender(), recipient, tAmount);
     }
 
      function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
