@@ -2,8 +2,8 @@
 FIDOMETA (FMC) - Virtual Financial Platform on Metaverse
 
 Special Terms:
-1. community_charge - This is the percentage to be deducted from each transaction and reflected to all holders. deafult is 5%.
-2. ecoSysFee  - Percentage to be deducted from each transaction. deafult is 1%
+1. community_charge - This is the percentage to be deducted from each transaction and reflected to all holders. deafult is 3%.
+2. ecoSysFee  - Percentage to be deducted from each transaction. deafult is 1,5%
 3. ecoSysWallet - A special wallet where some percentage (ecoSysFee) from each transaction is deposited.These tokens will be later shared in charity.
 4. surcharge1,surcharge2,surcharge3 - there are three different surcharge for later purpose. Initially is 0%.
 5. surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet - Three wallet to take surcharge.
@@ -12,8 +12,8 @@ Special Terms:
 
 Features:
 
-1. 5% community fee is deducted from each transacion and reflected to all holders for passive income.
-2. 1% is deducted from each transaction is deposited to ecosystem wallet.
+1. 3% community fee is deducted from each transacion and reflected to all holders for passive income.
+2. 1.5% is deducted from each transaction is deposited to ecosystem wallet.
 3. community_charge, ecoSysFee,ecoSysWallet,surcharge1,surcharge2,surcharge3,surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet and bank wallet can be set by admin.
 4. An Address can be freezed to send/receive token by admin.
 5. An address can be include/removed from getting reflection/community distribution by admin.
@@ -26,3 +26,10 @@ Features:
 12. A user can check how much amount is locked in their wallet and for how much time.
 13. Token can be burn/mint by admin only.
 14. MaxTxPercent can be set by admin, it will set max_transaction_amount of token a user can send at once. 
+
+
+**Setup**
+After deployment
+1. Exclude owner wallet from Reward
+2. 0x000000000000000000000000000000000000dead set as surcharge-1 wallet
+3. set ecosystem wallet
