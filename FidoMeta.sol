@@ -1196,7 +1196,7 @@ contract Fidometa is Context, IERC20, Ownable {
 
         require(remainedToken != 0, "All tokens are unlocked");
         
-        require(block.timestamp > startTime + (initialLock * 1   ), "UnLocking period is not opened");
+        require(block.timestamp > startTime + (initialLock * 1 days ), "UnLocking period is not opened");
         uint256 timePassed = block.timestamp - (startTime + (initialLock * 1 days)); 
 
         uint256 monthNumber = (uint256(timePassed) + (uint256(30 days) - 1)) / uint256(30 days); 
