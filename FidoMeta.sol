@@ -1054,7 +1054,6 @@ contract Fidometa is Context, IERC20, Ownable {
         require(!frozenAccount[from], "Sender account is frozen");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-        require(balanceOf(from) > amount, "ERC20: Insufficient Fund ");
         require(amount > 0, "Transfer amount must be greater than zero");
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
