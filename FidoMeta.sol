@@ -1203,11 +1203,11 @@ contract Fidometa is Context, IERC20, Ownable {
 
         uint256 remainedMonth = monthNumber - monthCount;
         
-        if(remainedMonth > 10)
-            remainedMonth = 10;
+        if(remainedMonth > 5)
+            remainedMonth = 5;
         require(remainedMonth > 0, "Releasable token till now is released");
 
-        uint256 receivableToken = (lockedToken * (remainedMonth*10))/ 100;
+        uint256 receivableToken = (lockedToken * (remainedMonth*20))/ 100;
 
         locks[target_].monthCount    += remainedMonth;
         locks[target_].remainedToken -= receivableToken;
