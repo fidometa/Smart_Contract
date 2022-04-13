@@ -535,10 +535,10 @@ contract Fidometa is Context, IERC20, Ownable {
      * @param value The amount of lowest token units to be burned.
      */
     function burn(uint256 value) external onlyOwner {
-        require(value > 0, "ERC20: burn amount not valid");
+        require(value > 0, "BEP20: burn amount not valid");
         require(
             value <= balanceOf(msg.sender),
-            "ERC20: burn amount exceeds balance"
+            "BEP20: burn amount exceeds balance"
         );
         _tTotal = _tTotal.sub(value);
         emit Burn(msg.sender, value);
@@ -548,8 +548,8 @@ contract Fidometa is Context, IERC20, Ownable {
      * @param value The amount of lowest token units to be mint.
      */
     function mint(uint256 value) external onlyOwner {
-        require(value > 0, "ERC20: mint amount not valid");
-        require(totalSupply() + value <= _cap, "ERC20Capped: cap exceeded");
+        require(value > 0, "BEP20: mint amount not valid");
+        require(totalSupply() + value <= _cap, "BEP20Capped: cap exceeded");
         _tTotal = _tTotal.add(value);
         emit Mint(msg.sender, value);
     }
@@ -638,7 +638,7 @@ contract Fidometa is Context, IERC20, Ownable {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                "ERC20: transfer amount exceeds allowance"
+                "BEP20: transfer amount exceeds allowance"
             )
         );
         return true;
@@ -673,7 +673,7 @@ contract Fidometa is Context, IERC20, Ownable {
             spender,
             _allowances[_msgSender()][spender].sub(
                 subtractedValue,
-                "ERC20: decreased allowance below zero"
+                "BEP20: decreased allowance below zero"
             )
         );
         return true;
@@ -684,8 +684,8 @@ contract Fidometa is Context, IERC20, Ownable {
         address spender,
         uint256 amount
     ) private {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(owner != address(0), "BEP20: approve from the zero address");
+        require(spender != address(0), "BEP20: approve to the zero address");
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -925,8 +925,8 @@ contract Fidometa is Context, IERC20, Ownable {
         address to,
         uint256 amount
     ) private {
-        require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+        require(from != address(0), "BEP20: transfer from the zero address");
+        require(to != address(0), "BEP20: transfer to the zero address");
         require(from != to, "Invalid target");
         require(amount > 0, "Transfer amount must be greater than zero");
         if (from != owner() && to != owner())
