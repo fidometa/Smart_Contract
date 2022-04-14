@@ -314,7 +314,7 @@ contract Ownable is Context {
      * NOTE: Renouncing ownership will leave the contract without an owner,
      * thereby removing any functionality that is only available to the owner.
      */
-    function renounceOwnership() external virtual onlyOwner {
+    function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
@@ -323,7 +323,7 @@ contract Ownable is Context {
      * @dev Transfers ownership of the contract to a new account (`newOwner`).
      * Can only be called by the current owner.
      */
-    function transferOwnership(address newOwner) external virtual onlyOwner {
+    function transferOwnership(address newOwner) public virtual onlyOwner {
         require(
             newOwner != address(0),
             "Ownable: new owner is the zero address"
@@ -497,11 +497,21 @@ contract Fidometa is Context, IERC20, Ownable {
             ecoSysWallet != address(0),
             "Ecosystem wallet wallet is not valid"
         );
+        //remove old service wallet from exclusions
+        delete _isExcludedFromCommunity_charge[_ecoSysWallet];
+        delete _isExcludedFromEcoSysFee[_ecoSysWallet];
+        delete _isExcludedFromReward[_ecoSysWallet];
+        delete _isExcludedFromSurcharge1[_ecoSysWallet];
+        delete _isExcludedFromSurcharge2[_ecoSysWallet];
+        delete _isExcludedFromSurcharge3[_ecoSysWallet];
+
+        //add the new service wallet
         _ecoSysWallet = ecoSysWallet;
         _surcharge_1_Wallet = surcharge_1_wallet;
         _surcharge_2_Wallet = surcharge_2_wallet;
         _surcharge_3_Wallet = surcharge_3_wallet;
 
+        //exclude _ecoSysWallet  from charges
         _isExcludedFromCommunity_charge[_ecoSysWallet] = true;
         _isExcludedFromEcoSysFee[_ecoSysWallet] = true;
         _isExcludedFromReward[_ecoSysWallet] = true;
@@ -509,6 +519,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge2[_ecoSysWallet] = true;
         _isExcludedFromSurcharge3[_ecoSysWallet] = true;
 
+        //exclude _surcharge_1_Wallet  from charges
         _isExcludedFromCommunity_charge[_surcharge_1_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_1_Wallet] = true;
         _isExcludedFromReward[_surcharge_1_Wallet] = true;
@@ -516,6 +527,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge2[_surcharge_1_Wallet] = true;
         _isExcludedFromSurcharge3[_surcharge_1_Wallet] = true;
 
+        //exclude _surcharge_2_Wallet  from charges
         _isExcludedFromCommunity_charge[_surcharge_2_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_2_Wallet] = true;
         _isExcludedFromReward[_surcharge_2_Wallet] = true;
@@ -523,6 +535,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge2[_surcharge_2_Wallet] = true;
         _isExcludedFromSurcharge3[_surcharge_2_Wallet] = true;
 
+        //exclude _surcharge_3_Wallet  from charges
         _isExcludedFromCommunity_charge[_surcharge_3_Wallet] = true;
         _isExcludedFromEcoSysFee[_surcharge_3_Wallet] = true;
         _isExcludedFromReward[_surcharge_3_Wallet] = true;
@@ -856,7 +869,8 @@ contract Fidometa is Context, IERC20, Ownable {
     function _getCurrentSupply() private view returns (uint256, uint256) {
         uint256 rSupply = _rTotal;
         uint256 tSupply = _tTotal;
-        for (uint256 i = 0; i < _excluded.length; i++) {
+         uint cacheLength = _excluded.length;
+        for (uint256 i = 0; i < cacheLength; i++) {
             if (
                 _rOwned[_excluded[i]] > rSupply ||
                 _tOwned[_excluded[i]] > tSupply
@@ -878,15 +892,14 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tSurcharge2,
         uint256 tSurcharge3
     ) private {
+        uint256 currentRate = _getRate();
         if (tEcoSys > 0) {
-            uint256 currentRate = _getRate();
             uint256 rEcosys = tEcoSys.mul(currentRate);
             _rOwned[_ecoSysWallet] = _rOwned[_ecoSysWallet].add(rEcosys);
             if (_isExcludedFromEcoSysFee[_ecoSysWallet])
                 _tOwned[_ecoSysWallet] = _tOwned[_ecoSysWallet].add(tEcoSys);
         }
         if (tSurcharge1 > 0) {
-            uint256 currentRate = _getRate();
             uint256 rSurcharge1 = tSurcharge1.mul(currentRate);
             _rOwned[_surcharge_1_Wallet] = _rOwned[_surcharge_1_Wallet].add(
                 rSurcharge1
@@ -897,7 +910,6 @@ contract Fidometa is Context, IERC20, Ownable {
                 );
         }
         if (tSurcharge2 > 0) {
-            uint256 currentRate = _getRate();
             uint256 rSurcharge2 = tSurcharge2.mul(currentRate);
             _rOwned[_surcharge_2_Wallet] = _rOwned[_surcharge_2_Wallet].add(
                 rSurcharge2
@@ -908,7 +920,6 @@ contract Fidometa is Context, IERC20, Ownable {
                 );
         }
         if (tSurcharge3 > 0) {
-            uint256 currentRate = _getRate();
             uint256 rSurcharge3 = tSurcharge3.mul(currentRate);
             _rOwned[_surcharge_3_Wallet] = _rOwned[_surcharge_3_Wallet].add(
                 rSurcharge3
@@ -1106,7 +1117,6 @@ contract Fidometa is Context, IERC20, Ownable {
             locks[recipient].lockedToken == 0,
             "This address is already in vesting period"
         );
-        require(tAmount >= 0, "Amount should be greater than or equal to 0");
         require(
             initialLock >= 0,
             "timeindays should be greater than or equal to 0"
