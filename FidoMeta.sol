@@ -330,6 +330,7 @@ contract Ownable is Context {
         );
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
+        
     }
 }
 
@@ -434,6 +435,8 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[owner()] = true;
         _isExcludedFromSurcharge3[address(this)] = true;
 
+        _isExcludedFromReward[owner()] = true;
+
         _cap = _tTotal;
     }
 
@@ -497,6 +500,7 @@ contract Fidometa is Context, IERC20, Ownable {
             ecoSysWallet != address(0),
             "Ecosystem wallet wallet is not valid"
         );
+
         //remove old service wallet from exclusions
         delete _isExcludedFromCommunity_charge[_ecoSysWallet];
         delete _isExcludedFromEcoSysFee[_ecoSysWallet];
@@ -720,33 +724,17 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     /**
-      @dev  exclude an address from getting community reward
+      @dev  this function exclude owner wallet from getting reward
     */
-    function excludeFromReward(address account) external onlyOwner {
-        require(!_isExcludedFromReward[account], "Account is already excluded");
-        if (_rOwned[account] > 0) {
-            _tOwned[account] = tokenFromReflection(_rOwned[account]);
+    function excludeOwnerFromReward() external onlyOwner {
+        require(_isExcludedFromReward[owner()] != true, "Owner is already excluded");
+        if (_rOwned[owner()] > 0) {
+            _tOwned[owner()] = tokenFromReflection(_rOwned[owner()]);
         }
-        _isExcludedFromReward[account] = true;
-        _excluded.push(account);
+        _isExcludedFromReward[owner()] = true;
+        _excluded.push(owner());
     }
 
-    /**
-      @dev  include an address from getting community reward
-    */
-    function includeInReward(address account) external onlyOwner {
-        require(_isExcludedFromReward[account], "Account is already excluded");
-        uint cacheLength = _excluded.length;
-        for (uint256 i = 0; i < cacheLength; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[cacheLength - 1];
-                _tOwned[account] = 0;
-                _isExcludedFromReward[account] = false;
-                _excluded.pop();
-                break;
-            }
-        }
-    }
 
     /**
      *  @dev  include or exclude an account from charges,
