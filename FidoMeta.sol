@@ -69,11 +69,7 @@ interface IERC20 {
      *
      * Note that `value` may be zero.
      */
-    event Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 value
-          );
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
@@ -255,7 +251,7 @@ library SafeMath {
     }
 }
 
- contract Context {
+contract Context {
     function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
@@ -271,9 +267,12 @@ contract Ownable is Context {
     address private _previousOwner;
     uint256 private _lockTime;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
-    constructor () {
+    constructor() {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
@@ -281,25 +280,26 @@ contract Ownable is Context {
 
     function owner() public view returns (address) {
         return _owner;
-    }   
-    
+    }
+
     modifier onlyOwner() {
         require(_owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
-    
+
     function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
 
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(
+            newOwner != address(0),
+            "Ownable: new owner is the zero address"
+        );
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
-
- 
 }
 
 contract Fidometa is Context, IERC20, Ownable {
@@ -402,11 +402,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[address(this)] = true;
 
         _cap = _tTotal;
-
-        
     }
-
-    
 
     /**
      * @dev gives total Supply
@@ -476,8 +472,6 @@ contract Fidometa is Context, IERC20, Ownable {
         return true;
     }
 
-
-
     /**
      * @dev increases allowance
      */
@@ -524,9 +518,7 @@ contract Fidometa is Context, IERC20, Ownable {
         emit Approval(owner, spender, amount);
     }
 
-
-
-     /** @dev Burns a specific amount of tokens.
+    /** @dev Burns a specific amount of tokens.
      * @param value The amount of lowest token units to be burned.
      */
     function burn(uint256 value) external onlyOwner {
@@ -617,19 +609,16 @@ contract Fidometa is Context, IERC20, Ownable {
         _surcharge_3_Wallet = surcharge_3_wallet;
 
         //exclude _ecoSysWallet  from charges
-        excludeFromCharges(_ecoSysWallet,true,true,true,true,true);
-        excludeFromCharges(_surcharge_1_Wallet,true,true,true,true,true);
-        excludeFromCharges(_surcharge_2_Wallet,true,true,true,true,true);
-        excludeFromCharges(_surcharge_3_Wallet,true,true,true,true,true);
+        excludeFromCharges(_ecoSysWallet, true, true, true, true, true);
+        excludeFromCharges(_surcharge_1_Wallet, true, true, true, true, true);
+        excludeFromCharges(_surcharge_2_Wallet, true, true, true, true, true);
+        excludeFromCharges(_surcharge_3_Wallet, true, true, true, true, true);
 
         _isExcludedFromReward[_ecoSysWallet] = true;
         _isExcludedFromReward[_surcharge_1_Wallet] = true;
         _isExcludedFromReward[_surcharge_2_Wallet] = true;
         _isExcludedFromReward[_surcharge_3_Wallet] = true;
     }
-
-   
- 
 
     /**
      * @dev tokenFromReflection
@@ -668,15 +657,14 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     //exclude an address from getting community reward
-    function excludeFromReward(address account) public onlyOwner() {
+    function excludeFromReward(address account) public onlyOwner {
         require(!_isExcludedFromReward[account], "Account is already excluded");
-        if(_rOwned[account] > 0) {
+        if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
         }
         _isExcludedFromReward[account] = true;
         _excluded.push(account);
     }
-
 
     /**
      *  @dev it set the maximum amount of token an address can tranfer at once
@@ -779,7 +767,7 @@ contract Fidometa is Context, IERC20, Ownable {
     function _getCurrentSupply() private view returns (uint256, uint256) {
         uint256 rSupply = _rTotal;
         uint256 tSupply = _tTotal;
-         uint cacheLength = _excluded.length;
+        uint cacheLength = _excluded.length;
         for (uint256 i = 0; i < cacheLength; i++) {
             if (
                 _rOwned[_excluded[i]] > rSupply ||
@@ -841,7 +829,7 @@ contract Fidometa is Context, IERC20, Ownable {
         }
     }
 
-       /**
+    /**
      * @dev Transfers the tokens from an owner's account to the receiver account,
      * but only if the transaction initiator has sufficient allowance that
      * has been previously approved by the owner to the transaction initiator
@@ -871,7 +859,6 @@ contract Fidometa is Context, IERC20, Ownable {
         require(from != address(0), "BEP20: transfer from the zero address");
         require(to != address(0), "BEP20: transfer to the zero address");
         require(from != to, "Invalid target");
-        require(amount > 0, "Transfer amount must be greater than zero");
         if (from != owner() && to != owner())
             require(
                 amount <= _maxTxAmount,
@@ -1072,7 +1059,7 @@ contract Fidometa is Context, IERC20, Ownable {
         MValues memory mvalues = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
-        _doTransfer(mvalues,sender,recipient);
+        _doTransfer(mvalues, sender, recipient);
     }
 
     function _transferToExcluded(
@@ -1083,7 +1070,7 @@ contract Fidometa is Context, IERC20, Ownable {
         MValues memory mvalues = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
-        _doTransfer(mvalues,sender,recipient);
+        _doTransfer(mvalues, sender, recipient);
     }
 
     function _transferStandard(
@@ -1093,7 +1080,7 @@ contract Fidometa is Context, IERC20, Ownable {
     ) private {
         MValues memory mvalues = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
-        _doTransfer(mvalues,sender,recipient);
+        _doTransfer(mvalues, sender, recipient);
     }
 
     function _transferBothExcluded(
@@ -1105,10 +1092,14 @@ contract Fidometa is Context, IERC20, Ownable {
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
-        _doTransfer(mvalues,sender,recipient);
+        _doTransfer(mvalues, sender, recipient);
     }
 
-    function _doTransfer( MValues memory mvalues,address sender, address recipient) private{
+    function _doTransfer(
+        MValues memory mvalues,
+        address sender,
+        address recipient
+    ) private {
         _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
         takeCharges(
             mvalues.tEcoSysFee,
