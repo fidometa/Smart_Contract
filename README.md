@@ -19,8 +19,7 @@ Special Terms:
 3. 1.5% is deducted from each transaction is deposited to ecosystem wallet.
 4. 0.5% is duducted and send to burn address
 5. community_charge, ecoSysFee,ecoSysWallet,surcharge1,surcharge2,surcharge3,surcharge_1_Wallet,surcharge_2_Wallet,surcharge_3_Wallet can be set only by admin.
-6. An Address can be freezed to send token by admin.
-7. An address can be include/removed from getting reflection/community distribution/reward by admin.
+7. An address can be excluded from getting reflection/community distribution/reward by admin but can not be included back once excluded.
 8. An address can be include/removed from communityCharge,ecoSysFee,surcharge1,surcharge2,surcharge3 deduction by admin.
 9. Some amount of token can be transfer with lock by admin in any address for a given days. Locking/vesting works as below
 10. Locked token will be locked for some initial period say 3 Months, After completion of initial period a user can unlock their token 20% each month.
