@@ -34,3 +34,7 @@ After deployment
 1. Exclude owner wallet from Reward
 2. 0x000000000000000000000000000000000000dead set as surcharge-1 wallet
 3. set ecosystem wallet
+
+# Unit Test Environment
+HARDHAT
+
