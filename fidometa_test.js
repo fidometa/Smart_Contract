@@ -142,24 +142,4 @@ describe("Fidometa Test", function() {
         const afterSet = await token._maxTxAmount();
         console.log("Max tx amount before set:", afterSet)
     })
-
-    it("Burn token", async function () {
-        const beforeBurn = await token.balanceOf(owner.address);
-        console.log("Owner balance before burn:", beforeBurn);
-
-        await token.burn(ethers.utils.parseUnits("10000000", 9));
-
-        const afterBurn = await token.balanceOf(owner.address);
-        console.log("Owner balance after burn:", afterBurn);
-    })
-
-    it("Mint token", async function () {
-        const beforeMint = await token.balanceOf(owner.address);
-        console.log("Owner balance before mint:", beforeMint);
-
-        await token.mint(ethers.utils.parseUnits("10000000", 9));
-
-        const afterMint = await token.balanceOf(owner.address);
-        console.log("Owner balance after mint:", afterMint);
-    })
 })
