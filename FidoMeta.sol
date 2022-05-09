@@ -96,160 +96,6 @@ interface IERC20 {
  * class of bugs, so it's recommended to use it always.
  */
 
-library SafeMath {
-    /**
-     * @dev Returns the addition of two unsigned integers, reverting on
-     * overflow.
-     *
-     * Counterpart to Solidity's `+` operator.
-     *
-     * Requirements:
-     *
-     * - Addition cannot overflow.
-     */
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     *
-     * - Subtraction cannot overflow.
-     */
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     *
-     * - Subtraction cannot overflow.
-     */
-    function sub(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the multiplication of two unsigned integers, reverting on
-     * overflow.
-     *
-     * Counterpart to Solidity's `*` operator.
-     *
-     * Requirements:
-     *
-     * - Multiplication cannot overflow.
-     */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
-
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function div(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts with custom message when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
-        return a % b;
-    }
-}
 
 contract Context {
     function _msgSender() internal view virtual returns (address) {
@@ -265,7 +111,6 @@ contract Context {
 contract Ownable is Context {
     address private _owner;
     address private _previousOwner;
-    uint256 private _lockTime;
 
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -303,7 +148,6 @@ contract Ownable is Context {
 }
 
 contract Fidometa is Context, IERC20, Ownable {
-    using SafeMath for uint256;
 
     mapping(address => uint256) private _rOwned;
     mapping(address => uint256) private _tOwned;
@@ -321,10 +165,10 @@ contract Fidometa is Context, IERC20, Ownable {
 
     uint256 private constant MAX = ~uint256(0);
 
-    string public name = "Fido Meta";
-    string public symbol = "FMC";
-    uint8 public decimals = 9;
-    uint256 private _tTotal = 15000000000 * 10**uint256(decimals);
+    string public constant name = "Fido Meta";
+    string public constant symbol = "FMC";
+    uint8 public constant decimals = 9;
+    uint256 private  _tTotal = 15000000000 * 10**uint256(decimals);
     uint256 public _cap;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 public _tCommunityChargeTotal;
@@ -347,9 +191,6 @@ contract Fidometa is Context, IERC20, Ownable {
     uint256 private _previousSurcharge3 = _surcharge3;
 
     uint256 public _maxTxAmount = 5000000 * 10**uint256(decimals);
-
-    event Burn(address from, uint256 value);
-    event Mint(address from, uint256 value);
 
     mapping(address => LockDetails) public locks;
 
@@ -402,6 +243,8 @@ contract Fidometa is Context, IERC20, Ownable {
         _isExcludedFromSurcharge3[address(this)] = true;
 
         _cap = _tTotal;
+
+        emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
     /**
@@ -483,7 +326,7 @@ contract Fidometa is Context, IERC20, Ownable {
         _approve(
             _msgSender(),
             spender,
-            _allowances[_msgSender()][spender].add(addedValue)
+            _allowances[_msgSender()][spender] + addedValue
         );
         return true;
     }
@@ -496,49 +339,24 @@ contract Fidometa is Context, IERC20, Ownable {
         virtual
         returns (bool)
     {
+        require(_allowances[_msgSender()][spender] <= subtractedValue, "BEP20: decreased allowance below zero");
         _approve(
             _msgSender(),
             spender,
-            _allowances[_msgSender()][spender].sub(
-                subtractedValue,
-                "BEP20: decreased allowance below zero"
-            )
+            _allowances[_msgSender()][spender] - subtractedValue
         );
         return true;
     }
 
     function _approve(
-        address owner,
+        address _ownerAccount,
         address spender,
         uint256 amount
     ) private {
-        require(owner != address(0), "BEP20: approve from the zero address");
+        require(_ownerAccount != address(0), "BEP20: approve from the zero address");
         require(spender != address(0), "BEP20: approve to the zero address");
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
-
-    /** @dev Burns a specific amount of tokens.
-     * @param value The amount of lowest token units to be burned.
-     */
-    function burn(uint256 value) external onlyOwner {
-        require(value > 0, "BEP20: burn amount not valid");
-        require(
-            value <= balanceOf(msg.sender),
-            "BEP20: burn amount exceeds balance"
-        );
-        _tTotal = _tTotal.sub(value);
-        emit Burn(msg.sender, value);
-    }
-
-    /** @dev Mint a specific amount of tokens.
-     * @param value The amount of lowest token units to be mint.
-     */
-    function mint(uint256 value) external onlyOwner {
-        require(value > 0, "BEP20: mint amount not valid");
-        require(totalSupply() + value <= _cap, "BEP20Capped: cap exceeded");
-        _tTotal = _tTotal.add(value);
-        emit Mint(msg.sender, value);
+        _allowances[_ownerAccount][spender] = amount;
+        emit Approval(_ownerAccount, spender, amount);
     }
 
     /**
@@ -556,6 +374,12 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 surcharge2,
         uint256 surcharge3
     ) external onlyOwner {
+
+         require(
+            community_charge + ecoSysFee + surcharge1 + surcharge2 + surcharge3 <= (100 * 10**uint256(decimals)),
+            "Sum of all charges should be less than 100%"
+        );
+
         require(
             community_charge <= (100 * 10**uint256(decimals)),
             "Community Charge % should be less than equal to 100%"
@@ -633,7 +457,7 @@ contract Fidometa is Context, IERC20, Ownable {
             "Amount must be less than total reflections"
         );
         uint256 currentRate = _getRate();
-        return rAmount.div(currentRate);
+        return rAmount /currentRate;
     }
 
     /**
@@ -657,7 +481,7 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     //exclude an address from getting community reward
-    function excludeFromReward(address account) public onlyOwner {
+    function excludeFromReward(address account) external onlyOwner {
         require(!_isExcludedFromReward[account], "Account is already excluded");
         if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -670,15 +494,15 @@ contract Fidometa is Context, IERC20, Ownable {
      *  @dev it set the maximum amount of token an address can tranfer at once
      */
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner {
-        _maxTxAmount = _tTotal.mul(maxTxPercent).div(10**2);
+        _maxTxAmount = (_tTotal * maxTxPercent) /(10**2);
     }
 
     /**
      * @dev  reflection of fee on each transfer
      */
     function _reflectFee(uint256 rFee, uint256 tFee) private {
-        _rTotal = _rTotal.sub(rFee);
-        _tCommunityChargeTotal = _tCommunityChargeTotal.add(tFee);
+        _rTotal = _rTotal - rFee;
+        _tCommunityChargeTotal = _tCommunityChargeTotal + tFee;
     }
 
     function _getValues(uint256 tAmount) private view returns (MValues memory) {
@@ -689,15 +513,11 @@ contract Fidometa is Context, IERC20, Ownable {
             uint256 rTransferAmount,
             uint256 rCommunityCharge
         ) = _getRValues(tAmount, value.tCommunityCharge, currentRate);
-        uint256 rEcoSysFee = value.tEcoSysFee.mul(currentRate);
-        uint256 rSurcharge1 = value.tSurcharge1.mul(currentRate);
-        uint256 rSurcharge2 = value.tSurcharge2.mul(currentRate);
-        uint256 rSurcharge3 = value.tSurcharge3.mul(currentRate);
-        rTransferAmount = rTransferAmount
-            .sub(rEcoSysFee)
-            .sub(rSurcharge1)
-            .sub(rSurcharge2)
-            .sub(rSurcharge3);
+        uint256 rEcoSysFee = value.tEcoSysFee * currentRate;
+        uint256 rSurcharge1 = value.tSurcharge1 * currentRate;
+        uint256 rSurcharge2 = value.tSurcharge2 * currentRate;
+        uint256 rSurcharge3 = value.tSurcharge3 * currentRate;
+        rTransferAmount = rTransferAmount - rEcoSysFee - rSurcharge1 - rSurcharge2 - rSurcharge3;
         MValues memory mValues = MValues({
             rAmount: rAmount,
             rTransferAmount: rTransferAmount,
@@ -717,18 +537,13 @@ contract Fidometa is Context, IERC20, Ownable {
         view
         returns (TValues memory)
     {
-        uint256 tCommunityCharge = tAmount.mul(_community_charge).div(10**11);
-        uint256 tEcoSysFee = tAmount.mul(_ecoSysFee).div(10**11);
-        uint256 tSurcharge1 = tAmount.mul(_surcharge1).div(10**11);
-        uint256 tSurcharge2 = tAmount.mul(_surcharge2).div(10**11);
-        uint256 tSurcharge3 = tAmount.mul(_surcharge3).div(10**11);
-        uint256 tTransferAmountEco = tAmount.sub(tCommunityCharge).sub(
-            tEcoSysFee
-        );
-        uint256 tTransferAmount = tTransferAmountEco
-            .sub(tSurcharge1)
-            .sub(tSurcharge2)
-            .sub(tSurcharge3);
+        uint256 tCommunityCharge = (tAmount * _community_charge) / (10**11);
+        uint256 tEcoSysFee = (tAmount * _ecoSysFee) / (10**11);
+        uint256 tSurcharge1 = (tAmount *_surcharge1)/(10**11);
+        uint256 tSurcharge2 = (tAmount * _surcharge2)/(10**11);
+        uint256 tSurcharge3 = (tAmount * _surcharge3)/(10**11);
+        uint256 tTransferAmountEco = tAmount- tCommunityCharge - tEcoSysFee;
+        uint256 tTransferAmount = tTransferAmountEco - tSurcharge1 - tSurcharge2 - tSurcharge3;
         TValues memory tvalue = TValues({
             tTransferAmount: tTransferAmount,
             tCommunityCharge: tCommunityCharge,
@@ -753,15 +568,15 @@ contract Fidometa is Context, IERC20, Ownable {
             uint256
         )
     {
-        uint256 rAmount = tAmount.mul(currentRate);
-        uint256 rFee = tFee.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rFee);
+        uint256 rAmount = tAmount * currentRate;
+        uint256 rFee = tFee * currentRate;
+        uint256 rTransferAmount = rAmount - rFee;
         return (rAmount, rTransferAmount, rFee);
     }
 
     function _getRate() private view returns (uint256) {
         (uint256 rSupply, uint256 tSupply) = _getCurrentSupply();
-        return rSupply.div(tSupply);
+        return rSupply / tSupply;
     }
 
     function _getCurrentSupply() private view returns (uint256, uint256) {
@@ -773,10 +588,10 @@ contract Fidometa is Context, IERC20, Ownable {
                 _rOwned[_excluded[i]] > rSupply ||
                 _tOwned[_excluded[i]] > tSupply
             ) return (_rTotal, _tTotal);
-            rSupply = rSupply.sub(_rOwned[_excluded[i]]);
-            tSupply = tSupply.sub(_tOwned[_excluded[i]]);
+            rSupply = rSupply - _rOwned[_excluded[i]];
+            tSupply = tSupply - _tOwned[_excluded[i]];
         }
-        if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
+        if (rSupply < _rTotal / _tTotal) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
 
@@ -792,40 +607,37 @@ contract Fidometa is Context, IERC20, Ownable {
     ) private {
         uint256 currentRate = _getRate();
         if (tEcoSys > 0) {
-            uint256 rEcosys = tEcoSys.mul(currentRate);
-            _rOwned[_ecoSysWallet] = _rOwned[_ecoSysWallet].add(rEcosys);
+            uint256 rEcosys = tEcoSys * currentRate;
+            _rOwned[_ecoSysWallet] = _rOwned[_ecoSysWallet] + rEcosys;
             if (_isExcludedFromEcoSysFee[_ecoSysWallet])
-                _tOwned[_ecoSysWallet] = _tOwned[_ecoSysWallet].add(tEcoSys);
+                _tOwned[_ecoSysWallet] = _tOwned[_ecoSysWallet] + tEcoSys;
         }
         if (tSurcharge1 > 0) {
-            uint256 rSurcharge1 = tSurcharge1.mul(currentRate);
-            _rOwned[_surcharge_1_Wallet] = _rOwned[_surcharge_1_Wallet].add(
-                rSurcharge1
-            );
+            uint256 rSurcharge1 = tSurcharge1 * currentRate;
+            _rOwned[_surcharge_1_Wallet] = _rOwned[_surcharge_1_Wallet] + rSurcharge1;
             if (_isExcludedFromSurcharge1[_surcharge_1_Wallet])
-                _tOwned[_surcharge_1_Wallet] = _tOwned[_surcharge_1_Wallet].add(
-                    tSurcharge1
-                );
+                _tOwned[_surcharge_1_Wallet] = _tOwned[_surcharge_1_Wallet] +
+                    tSurcharge1;
         }
         if (tSurcharge2 > 0) {
-            uint256 rSurcharge2 = tSurcharge2.mul(currentRate);
-            _rOwned[_surcharge_2_Wallet] = _rOwned[_surcharge_2_Wallet].add(
+            uint256 rSurcharge2 = tSurcharge2 * currentRate;
+            _rOwned[_surcharge_2_Wallet] = _rOwned[_surcharge_2_Wallet] + 
                 rSurcharge2
-            );
+            ;
             if (_isExcludedFromSurcharge1[_surcharge_2_Wallet])
-                _tOwned[_surcharge_2_Wallet] = _tOwned[_surcharge_2_Wallet].add(
+                _tOwned[_surcharge_2_Wallet] = _tOwned[_surcharge_2_Wallet]+
                     tSurcharge2
-                );
+                ;
         }
         if (tSurcharge3 > 0) {
-            uint256 rSurcharge3 = tSurcharge3.mul(currentRate);
-            _rOwned[_surcharge_3_Wallet] = _rOwned[_surcharge_3_Wallet].add(
+            uint256 rSurcharge3 = tSurcharge3 * currentRate;
+            _rOwned[_surcharge_3_Wallet] = _rOwned[_surcharge_3_Wallet] + 
                 rSurcharge3
-            );
+            ;
             if (_isExcludedFromSurcharge3[_surcharge_3_Wallet])
-                _tOwned[_surcharge_3_Wallet] = _tOwned[_surcharge_3_Wallet].add(
+                _tOwned[_surcharge_3_Wallet] = _tOwned[_surcharge_3_Wallet] +
                     tSurcharge3
-                );
+                ;
         }
     }
 
@@ -840,13 +652,11 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 amount
     ) external override returns (bool) {
         _transfer(sender, recipient, amount);
+         require(_allowances[sender][_msgSender()] > amount, "BEP20: transfer from the zero address");
         _approve(
             sender,
             _msgSender(),
-            _allowances[sender][_msgSender()].sub(
-                amount,
-                "BEP20: transfer amount exceeds allowance"
-            )
+            _allowances[sender][_msgSender()] - amount
         );
         return true;
     }
@@ -987,8 +797,7 @@ contract Fidometa is Context, IERC20, Ownable {
      */
 
     function unlock(address target_) external {
-        require(target_ != address(0), "Invalid target");
-        require(_msgSender() == target_, "Invalid target");
+        require(target_ != address(0), "Target address can not be zero address");
         uint256 startTime = locks[target_].startTime;
         uint256 lockedToken = locks[target_].lockedToken;
         uint256 remainedToken = locks[target_].remainedToken;
@@ -1005,6 +814,7 @@ contract Fidometa is Context, IERC20, Ownable {
 
         uint256 monthNumber = (uint256(timePassed) + (uint256(30 days) - 1)) /
             uint256(30 days);
+        if(monthNumber>5) monthNumber=5;
 
         uint256 remainedMonth = monthNumber - monthCount;
 
@@ -1013,8 +823,9 @@ contract Fidometa is Context, IERC20, Ownable {
 
         uint256 receivableToken = (lockedToken * (remainedMonth * 20)) / 100;
 
-        locks[target_].monthCount += remainedMonth;
-        locks[target_].remainedToken -= receivableToken;
+        locks[target_].monthCount += remainedMonth;   
+        remainedToken -= receivableToken;
+        locks[target_].remainedToken = remainedToken;
 
         if (locks[target_].remainedToken == 0) {
             delete locks[target_];
@@ -1037,10 +848,7 @@ contract Fidometa is Context, IERC20, Ownable {
             locks[recipient].lockedToken == 0,
             "This address is already in vesting period"
         );
-        require(
-            initialLock >= 0,
-            "timeindays should be greater than or equal to 0"
-        );
+       
         _transfer(_msgSender(), recipient, tAmount);
         locks[recipient] = LockDetails(
             block.timestamp,
@@ -1057,8 +865,8 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tAmount
     ) private {
         MValues memory mvalues = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _tOwned[sender] = _tOwned[sender] - tAmount;
+        _rOwned[sender] = _rOwned[sender] - mvalues.rAmount;
         _doTransfer(mvalues, sender, recipient);
     }
 
@@ -1068,8 +876,8 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tAmount
     ) private {
         MValues memory mvalues = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _rOwned[sender] = _rOwned[sender] - mvalues.rAmount;
+        _tOwned[recipient] = _tOwned[recipient] + mvalues.tTransferAmount;
         _doTransfer(mvalues, sender, recipient);
     }
 
@@ -1079,7 +887,7 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tAmount
     ) private {
         MValues memory mvalues = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
+        _rOwned[sender] = _rOwned[sender] - mvalues.rAmount;
         _doTransfer(mvalues, sender, recipient);
     }
 
@@ -1089,9 +897,9 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 tAmount
     ) private {
         MValues memory mvalues = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(mvalues.rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(mvalues.tTransferAmount);
+        _tOwned[sender] = _tOwned[sender] - tAmount;
+        _rOwned[sender] = _rOwned[sender] - mvalues.rAmount;
+        _tOwned[recipient] = _tOwned[recipient] + mvalues.tTransferAmount;
         _doTransfer(mvalues, sender, recipient);
     }
 
@@ -1100,7 +908,7 @@ contract Fidometa is Context, IERC20, Ownable {
         address sender,
         address recipient
     ) private {
-        _rOwned[recipient] = _rOwned[recipient].add(mvalues.rTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient] + mvalues.rTransferAmount;
         takeCharges(
             mvalues.tEcoSysFee,
             mvalues.tSurcharge1,
