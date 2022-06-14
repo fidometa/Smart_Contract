@@ -438,10 +438,10 @@ contract Fidometa is Context, IERC20, Ownable {
         excludeFromCharges(_surcharge_2_Wallet, true, true, true, true, true);
         excludeFromCharges(_surcharge_3_Wallet, true, true, true, true, true);
 
-        _isExcludedFromReward[_ecoSysWallet] = true;
-        _isExcludedFromReward[_surcharge_1_Wallet] = true;
-        _isExcludedFromReward[_surcharge_2_Wallet] = true;
-        _isExcludedFromReward[_surcharge_3_Wallet] = true;
+        excludeFromReward(_ecoSysWallet);
+        excludeFromReward(_surcharge_1_Wallet);
+        excludeFromReward(_surcharge_2_Wallet);
+        excludeFromReward(_surcharge_3_Wallet);
     }
 
     /**
@@ -481,7 +481,7 @@ contract Fidometa is Context, IERC20, Ownable {
     }
 
     //exclude an address from getting community reward
-    function excludeFromReward(address account) external onlyOwner {
+    function excludeFromReward(address account) public onlyOwner {
         require(!_isExcludedFromReward[account], "Account is already excluded");
         if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -834,13 +834,13 @@ contract Fidometa is Context, IERC20, Ownable {
 
     /** @dev Transfer with lock
      * @param recipient The recipient address.
-     * @param tAmount Amount that has to be locked
+     * @param tAmountWithoutDecimals Amount that has to be locked (without decimals)
      * @param initialLock duration in days for locking
      */
 
     function transferWithLock(
         address recipient,
-        uint256 tAmount,
+        uint256 tAmountWithoutDecimals,
         uint256 initialLock
     ) external onlyOwner {
         require(recipient != address(0), "Invalid target");
@@ -848,7 +848,9 @@ contract Fidometa is Context, IERC20, Ownable {
             locks[recipient].lockedToken == 0,
             "This address is already in vesting period"
         );
-       
+       //decimals are added to the amount
+       //Be carefull to not to transfer too much tokens
+        uint256 tAmount = tAmountWithoutDecimals * 10**uint256(decimals);
         _transfer(_msgSender(), recipient, tAmount);
         locks[recipient] = LockDetails(
             block.timestamp,
