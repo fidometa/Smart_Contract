@@ -652,7 +652,7 @@ contract Fidometa is Context, IERC20, Ownable {
         uint256 amount
     ) external override returns (bool) {
         _transfer(sender, recipient, amount);
-         require(_allowances[sender][_msgSender()] > amount, "BEP20: transfer from the zero address");
+         require(_allowances[sender][_msgSender()] >= amount,"BEP20: transfer amount exceeds allowance");
         _approve(
             sender,
             _msgSender(),
